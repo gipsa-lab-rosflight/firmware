@@ -107,4 +107,4 @@ CXX_STRICT_FLAGS += -pedantic -pedantic-errors -Werror -Wall -Wextra \
 FILE_SIZE_FLAGS += -ffunction-sections -fdata-sections -fno-exceptions
 CXX_FILE_SIZE_FLAGS =-c $(FILE_SIZE_FLAGS) -fno-rtti
 CFLAGS   = -c $(DEFS) $(DEBUG_FLAGS) $(FILE_SIZE_FLAGS) -std=c99
-CXXFLAGS = -c $(DEFS) $(DEBUG_FLAGS) $(CXX_FILE_SIZE_FLAGS) $(CXX_STRICT_FLAGS) -std=c++11
+CXXFLAGS = -c $(DEFS) $(DEBUG_FLAGS) $(CXX_FILE_SIZE_FLAGS) -std=c++11 # $(CXX_STRICT_FLAGS) 

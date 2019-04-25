@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017, James Jackson and Daniel Koch, BYU MAGICC Lab
+ *                     and Amaury Negre, CNRS
  *
  * All rights reserved.
  *
@@ -29,64 +30,64 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "airbourne_board.h"
+#include "airbot_board.h"
 
 namespace rosflight_firmware
 {
 
-AirbourneBoard::AirbourneBoard()
+AirbotBoard::AirbotBoard()
 {
 }
 
-void AirbourneBoard::init_board()
+void AirbotBoard::init_board()
 {
   systemInit();
   led2_.init(LED2_GPIO, LED2_PIN);
   led1_.init(LED1_GPIO, LED1_PIN);
-
+	
+	voltage_input_.init(BAT_VOLTAGE_ADC, BAT_VOLTAGE_CHANNEL, BAT_VOLTAGE_GPIO, BAT_VOLTAGE_PIN);
+	
   int_i2c_.init(&i2c_config[BARO_I2C]);
   ext_i2c_.init(&i2c_config[EXTERNAL_I2C]);
   spi1_.init(&spi_config[MPU6000_SPI]);
   spi3_.init(&spi_config[FLASH_SPI]);
-  uart3_.init(&uart_config[UART3], 115200, UART::MODE_8N1);
-
-  backup_sram_init();
-
+  uart1_.init(&uart_config[UART1], 115200, UART::MODE_8N1);
+	
   current_serial_ = &vcp_;    //uncomment this to switch to VCP as the main output
 }
 
-void AirbourneBoard::board_reset(bool bootloader)
+void AirbotBoard::board_reset(bool bootloader)
 {
   (void)bootloader;
   NVIC_SystemReset();
 }
 
 // clock
-uint32_t AirbourneBoard::clock_millis()
+uint32_t AirbotBoard::clock_millis()
 {
   return millis();
 }
 
-uint64_t AirbourneBoard::clock_micros()
+uint64_t AirbotBoard::clock_micros()
 {
   return micros();
 }
 
-void AirbourneBoard::clock_delay(uint32_t milliseconds)
+void AirbotBoard::clock_delay(uint32_t milliseconds)
 {
   delay(milliseconds);
 }
 
 // serial
-void AirbourneBoard::serial_init(uint32_t baud_rate, uint32_t dev)
+void AirbotBoard::serial_init(uint32_t baud_rate, uint32_t dev)
 {
   vcp_.init();
   switch (dev)
   {
-  case SERIAL_DEVICE_UART3:
-    uart3_.init(&uart_config[UART3], baud_rate);
-    current_serial_ = &uart3_;
-    secondary_serial_device_ = SERIAL_DEVICE_UART3;
+  case SERIAL_DEVICE_UART1:
+    uart1_.init(&uart_config[UART1], baud_rate);
+    current_serial_ = &uart1_;
+    secondary_serial_device_ = SERIAL_DEVICE_UART1;
     break;
   default:
     current_serial_ = &vcp_;
@@ -94,12 +95,12 @@ void AirbourneBoard::serial_init(uint32_t baud_rate, uint32_t dev)
   }
 }
 
-void AirbourneBoard::serial_write(const uint8_t *src, size_t len)
+void AirbotBoard::serial_write(const uint8_t *src, size_t len)
 {
   current_serial_->write(src, len);
 }
 
-uint16_t AirbourneBoard::serial_bytes_available()
+uint16_t AirbotBoard::serial_bytes_available()
 {
   if (vcp_.connected() || secondary_serial_device_ == SERIAL_DEVICE_VCP)
   {
@@ -109,8 +110,8 @@ uint16_t AirbourneBoard::serial_bytes_available()
   {
     switch (secondary_serial_device_)
     {
-    case SERIAL_DEVICE_UART3:
-      current_serial_ = &uart3_;
+    case SERIAL_DEVICE_UART1:
+      current_serial_ = &uart1_;
       break;
     default:
       // no secondary serial device
@@ -121,42 +122,42 @@ uint16_t AirbourneBoard::serial_bytes_available()
   return current_serial_->rx_bytes_waiting();
 }
 
-uint8_t AirbourneBoard::serial_read()
+uint8_t AirbotBoard::serial_read()
 {
 
   return current_serial_->read_byte();
 }
 
-void AirbourneBoard::serial_flush()
+void AirbotBoard::serial_flush()
 {
   current_serial_->flush();
 }
 
 
 // sensors
-void AirbourneBoard::sensors_init()
+void AirbotBoard::sensors_init()
 {
-  while (millis() < 50) {} // wait for sensors to boot up
+  while(millis() < 50) {} // wait for sensors to boot up
   imu_.init(&spi1_, MPU6000_CS_GPIO, MPU6000_CS_PIN);
 
   baro_.init(&int_i2c_);
-  mag_.init(&int_i2c_);
+  mag_.init(&ext_i2c_);
   sonar_.init(&ext_i2c_);
   airspeed_.init(&ext_i2c_);
-  gnss_.init(&uart3_);
+  gnss_.init(&uart1_);
 }
 
-uint16_t AirbourneBoard::num_sensor_errors()
+uint16_t AirbotBoard::num_sensor_errors()
 {
   return ext_i2c_.num_errors();
 }
 
-bool AirbourneBoard::new_imu_data()
+bool AirbotBoard::new_imu_data()
 {
   return imu_.new_data();
 }
 
-bool AirbourneBoard::imu_read(float accel[3], float *temperature, float gyro[3], uint64_t *time_us)
+bool AirbotBoard::imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
 {
   float read_accel[3], read_gyro[3];
   imu_.read(read_accel, read_gyro, temperature, time_us);
@@ -172,56 +173,56 @@ bool AirbourneBoard::imu_read(float accel[3], float *temperature, float gyro[3],
   return true;
 }
 
-void AirbourneBoard::imu_not_responding_error()
+void AirbotBoard::imu_not_responding_error()
 {
   sensors_init();
 }
 
-bool AirbourneBoard::mag_present()
+bool AirbotBoard::mag_present()
 {
   mag_.update();
   return mag_.present();
 }
 
-void AirbourneBoard::mag_update()
+void AirbotBoard::mag_update()
 {
   mag_.update();
 }
 
-void AirbourneBoard::mag_read(float mag[3])
+void AirbotBoard::mag_read(float mag[3])
 {
   mag_.update();
   mag_.read(mag);
 }
-bool AirbourneBoard::baro_present()
+bool AirbotBoard::baro_present()
 {
   baro_.update();
   return baro_.present();
 }
 
-void AirbourneBoard::baro_update()
+void AirbotBoard::baro_update()
 {
   baro_.update();
 }
 
-void AirbourneBoard::baro_read(float *pressure, float *temperature)
+void AirbotBoard::baro_read(float *pressure, float *temperature)
 {
   baro_.update();
   baro_.read(pressure, temperature);
 }
 
-bool AirbourneBoard::diff_pressure_present()
+bool AirbotBoard::diff_pressure_present()
 {
   return airspeed_.present();
 }
 
-void AirbourneBoard::diff_pressure_update()
+void AirbotBoard::diff_pressure_update()
 {
   airspeed_.update();
 }
 
 
-void AirbourneBoard::diff_pressure_read(float *diff_pressure, float *temperature)
+void AirbotBoard::diff_pressure_read(float *diff_pressure, float *temperature)
 {
   (void) diff_pressure;
   (void) temperature;
@@ -229,34 +230,31 @@ void AirbourneBoard::diff_pressure_read(float *diff_pressure, float *temperature
   airspeed_.read(diff_pressure, temperature);
 }
 
-bool AirbourneBoard::sonar_present()
+bool AirbotBoard::sonar_present()
 {
   return sonar_.present();
 }
 
-void AirbourneBoard::sonar_update()
+void AirbotBoard::sonar_update()
 {
   sonar_.update();
 }
 
-float AirbourneBoard::sonar_read()
+float AirbotBoard::sonar_read()
 {
   return sonar_.read();
 }
 
-bool AirbourneBoard::gnss_present()
+bool AirbotBoard::gnss_present()
 {
   return gnss_.present();
 }
-void AirbourneBoard::gnss_update() {}
-bool AirbourneBoard::gnss_has_new_data()
+void AirbotBoard::gnss_update(){}
+bool AirbotBoard::gnss_has_new_data()
 {
   return this->gnss_.new_data();
 }
-//This method translates the UBLOX driver interface into the ROSFlight interface
-//If not gnss_has_new_data(), then this may return 0's for ECEF position data,
-//ECEF velocity data, or both
-GNSSData AirbourneBoard::gnss_read()
+GNSSData AirbotBoard::gnss_read()
 {
   UBLOX::GNSSPVT gnss_pvt= gnss_.read();
   UBLOX::GNSSPosECEF pos_ecef = gnss_.read_pos_ecef();
@@ -273,28 +271,18 @@ GNSSData AirbourneBoard::gnss_read()
   gnss.vel_d = gnss_pvt.vel_d;
   gnss.h_acc = gnss_pvt.h_acc;
   gnss.v_acc = gnss_pvt.v_acc;
-  //Does not include ECEF position data if the timestamp doesn't match
-  //See UBLOX::new_data() for reasoning
-  if (gnss.time_of_week == pos_ecef.time_of_week)
-  {
-    gnss.ecef.x = pos_ecef.x;
-    gnss.ecef.y = pos_ecef.y;
-    gnss.ecef.z = pos_ecef.z;
-    gnss.ecef.p_acc = pos_ecef.p_acc;
-  }
-  //Does not include ECEF position data if the timestamp doesn't match
-  //See UBLOX::new_data() for reasoning
-  if (gnss.time_of_week == vel_ecef.time_of_week)
-  {
-    gnss.ecef.vx = vel_ecef.vx;
-    gnss.ecef.vy = vel_ecef.vy;
-    gnss.ecef.vz = vel_ecef.vz;
-    gnss.ecef.s_acc = vel_ecef.s_acc;
-  }
+  gnss.ecef.x = pos_ecef.x;
+  gnss.ecef.y = pos_ecef.y;
+  gnss.ecef.z = pos_ecef.z;
+  gnss.ecef.p_acc = pos_ecef.p_acc;
+  gnss.ecef.vx = vel_ecef.vx;
+  gnss.ecef.vy = vel_ecef.vy;
+  gnss.ecef.vz = vel_ecef.vz;
+  gnss.ecef.s_acc = vel_ecef.s_acc;
 
   return gnss;
 }
-GNSSRaw AirbourneBoard::gnss_raw_read()
+GNSSRaw AirbotBoard::gnss_raw_read()
 {
   UBLOX::NAV_PVT_t pvt = gnss_.read_raw();
   GNSSRaw raw = {};
@@ -329,7 +317,7 @@ GNSSRaw AirbourneBoard::gnss_raw_read()
 }
 
 // PWM
-void AirbourneBoard::rc_init(rc_type_t rc_type)
+void AirbotBoard::rc_init(rc_type_t rc_type)
 {
   switch (rc_type)
   {
@@ -347,12 +335,12 @@ void AirbourneBoard::rc_init(rc_type_t rc_type)
   }
 }
 
-float AirbourneBoard::rc_read(uint8_t channel)
+float AirbotBoard::rc_read(uint8_t channel)
 {
   return rc_->read(channel);
 }
 
-void AirbourneBoard::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
+void AirbotBoard::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
 {
   for (int i = 0; i < PWM_NUM_OUTPUTS; i++)
   {
@@ -361,7 +349,7 @@ void AirbourneBoard::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
   }
 }
 
-void AirbourneBoard::pwm_disable()
+void AirbotBoard::pwm_disable()
 {
   for (int i = 0; i < PWM_NUM_OUTPUTS; i++)
   {
@@ -369,71 +357,56 @@ void AirbourneBoard::pwm_disable()
   }
 }
 
-void AirbourneBoard::pwm_write(uint8_t channel, float value)
+void AirbotBoard::pwm_write(uint8_t channel, float value)
 {
   esc_out_[channel].write(value);
 }
 
-bool AirbourneBoard::rc_lost()
+bool AirbotBoard::rc_lost()
 {
   return rc_->lost();
 }
 
 // non-volatile memory
-void AirbourneBoard::memory_init()
+void AirbotBoard::memory_init()
 {
   return flash_.init(&spi3_);
 }
 
-bool AirbourneBoard::memory_read(void *data, size_t len)
+bool AirbotBoard::memory_read(void * data, size_t len)
 {
-  return flash_.read_config(reinterpret_cast<uint8_t *>(data), len);
+  return flash_.read_config(reinterpret_cast<uint8_t*>(data), len);
 }
 
-bool AirbourneBoard::memory_write(const void *data, size_t len)
+bool AirbotBoard::memory_write(const void * data, size_t len)
 {
-  return flash_.write_config(reinterpret_cast<const uint8_t *>(data), len);
+  return flash_.write_config(reinterpret_cast<const uint8_t*>(data), len);
 }
 
 // LED
-void AirbourneBoard::led0_on()
-{
-  led1_.on();
-}
-void AirbourneBoard::led0_off()
-{
-  led1_.off();
-}
-void AirbourneBoard::led0_toggle()
-{
-  led1_.toggle();
-}
+void AirbotBoard::led0_on() { led1_.on(); }
+void AirbotBoard::led0_off() { led1_.off(); }
+void AirbotBoard::led0_toggle() { led1_.toggle(); }
 
-void AirbourneBoard::led1_on()
-{
-  led2_.on();
-}
-void AirbourneBoard::led1_off()
-{
-  led2_.off();
-}
-void AirbourneBoard::led1_toggle()
-{
-  led2_.toggle();
-}
+void AirbotBoard::led1_on() { led2_.on(); }
+void AirbotBoard::led1_off() { led2_.off(); }
+void AirbotBoard::led1_toggle() { led2_.toggle(); }
 
-// Battery voltage
-bool AirbourneBoard::battery_voltage_present() {return false;}
-void AirbourneBoard::battery_voltage_update(){}
-float AirbourneBoard::battery_voltage_read() {return 0.f;}
+bool AirbotBoard::battery_voltage_present() {return true;}
+void AirbotBoard::battery_voltage_update()
+{
+	battery_voltage_ = BAT_VOLTAGE_MULT * voltage_input_.read();
+}
+	
+float AirbotBoard::battery_voltage_read() {return battery_voltage_;}
 
 //Backup memory
-bool AirbourneBoard::has_backup_data()
+bool AirbotBoard::has_backup_data()
 {
   BackupData backup_data = backup_sram_read();
   return (check_backup_checksum(backup_data) && backup_data.error_code!=0);
 }
-rosflight_firmware::BackupData AirbourneBoard::get_backup_data()
+rosflight_firmware::BackupData AirbotBoard::get_backup_data()
 {
   return backup_sram_read();
 }

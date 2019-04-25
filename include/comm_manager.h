@@ -58,8 +58,11 @@ private:
     STREAM_ID_BARO,
     STREAM_ID_SONAR,
     STREAM_ID_MAG,
-
+		STREAM_ID_BATTERY,
+		
     STREAM_ID_SERVO_OUTPUT_RAW,
+    STREAM_ID_GNSS,
+    STREAM_ID_GNSS_RAW,
     STREAM_ID_RC_RAW,
     STREAM_ID_LOW_PRIORITY,
     STREAM_COUNT
@@ -75,8 +78,8 @@ private:
 
   uint8_t sysid_;
   uint64_t offboard_control_time_;
-  ROSflight& RF_;
-  CommLink& comm_link_;
+  ROSflight &RF_;
+  CommLink &comm_link_;
   uint8_t send_params_index_;
   bool initialized_;
 
@@ -96,12 +99,12 @@ private:
   void update_system_id(uint16_t param_id);
 
   void param_request_list_callback(uint8_t target_system);
-  void param_request_read_callback(uint8_t target_system, const char* const param_name, int16_t param_index);
-  void param_set_int_callback(uint8_t target_system, const char* const param_name, int32_t param_value);
-  void param_set_float_callback(uint8_t target_system, const char* const param_name, float param_value);
+  void param_request_read_callback(uint8_t target_system, const char *const param_name, int16_t param_index);
+  void param_set_int_callback(uint8_t target_system, const char *const param_name, int32_t param_value);
+  void param_set_float_callback(uint8_t target_system, const char *const param_name, float param_value);
   void command_callback(CommLink::Command command);
   void timesync_callback(int64_t tc1, int64_t ts1);
-  void offboard_control_callback(const CommLink::OffboardControl& control);
+  void offboard_control_callback(const CommLink::OffboardControl &control);
   void attitude_correction_callback(const turbomath::Quaternion &q);
   void heartbeat_callback(void);
 
@@ -115,6 +118,13 @@ private:
   void send_baro(void);
   void send_sonar(void);
   void send_mag(void);
+  void send_battery(void);	
+
+  //The time of week stamp for the last sent GNSS message, to prevent re-sending
+  uint32_t last_sent_gnss_tow=0;
+  uint32_t last_sent_gnss_raw_tow=0;
+  void send_gnss(void);
+  void send_gnss_raw(void);
   void send_low_priority(void);
   void send_error_data(void);
 
@@ -124,7 +134,8 @@ private:
 
   void send_next_param(void);
 
-  Stream streams_[STREAM_COUNT] = {
+  Stream streams_[STREAM_COUNT] =
+  {
     Stream(0,     [this]{this->send_heartbeat();}),
     Stream(0,     [this]{this->send_status();}),
     Stream(0,     [this]{this->send_attitude();}),
@@ -133,14 +144,17 @@ private:
     Stream(0,     [this]{this->send_baro();}),
     Stream(0,     [this]{this->send_sonar();}),
     Stream(0,     [this]{this->send_mag();}),
+    Stream(0,     [this]{this->send_battery();}),		
     Stream(0,     [this]{this->send_output_raw();}),
+    Stream(0,     [this]{this->send_gnss();}),
+    Stream(0,     [this]{this->send_gnss_raw();}),
     Stream(0,     [this]{this->send_rc_raw();}),
     Stream(20000, [this]{this->send_low_priority();})
   };
 
 public:
 
-  CommManager(ROSflight& rf, CommLink& comm_link);
+  CommManager(ROSflight &rf, CommLink &comm_link);
 
   void init();
   void receive(void);
@@ -154,6 +168,7 @@ public:
   void send_named_value_float(const char *const name, float value);
 };
 
+//CommManager *instance = nullptr;
 } // namespace rosflight_firmware
 
 #endif // ROSFLIGHT_FIRMWARE_COMM_MANAGER_H

@@ -37,28 +37,31 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "sensors.h"
 #include "state_manager.h"
 
 namespace rosflight_firmware
 {
-struct debug_info_t{
-    uint32_t r0;
-    uint32_t r1;
-    uint32_t r2;
-    uint32_t r3;
-    uint32_t r12;
-    uint32_t lr;
-    uint32_t pc;
-    uint32_t psr;
+struct debug_info_t
+{
+  uint32_t r0;
+  uint32_t r1;
+  uint32_t r2;
+  uint32_t r3;
+  uint32_t r12;
+  uint32_t lr;
+  uint32_t pc;
+  uint32_t psr;
 };
-struct BackupData{
-    uint32_t error_code;
-    debug_info_t debug_info;
-    uint32_t reset_count;
-    uint32_t arm_status; //This must equals ARM_MAGIC, or else the state manager will not rearm on reboot
-    //TODO add state manager info
-    StateManager::State state;
-    uint32_t checksum; //With the current implementation of the checksum, this must go last
+struct BackupData
+{
+  uint32_t error_code;
+  debug_info_t debug_info;
+  uint32_t reset_count;
+  uint32_t arm_status; //This must equals ARM_MAGIC, or else the state manager will not rearm on reboot
+  //TODO add state manager info
+  StateManager::State state;
+  uint32_t checksum; //With the current implementation of the checksum, this must go last
 };
 //This magic number is used to check that the firmware was armed before it reset
 const uint32_t ARM_MAGIC = 0xfa11bad;
@@ -94,7 +97,7 @@ public:
   virtual uint16_t num_sensor_errors()  = 0;
 
   virtual bool new_imu_data() = 0;
-  virtual bool imu_read(float accel[3], float *temperature, float gyro[3], uint64_t* time) = 0;
+  virtual bool imu_read(float accel[3], float *temperature, float gyro[3], uint64_t *time) = 0;
   virtual void imu_not_responding_error() = 0;
 
   virtual bool mag_present() = 0;
@@ -112,6 +115,13 @@ public:
   virtual bool sonar_present() = 0;
   virtual void sonar_update() = 0;
   virtual float sonar_read() = 0;
+
+  virtual bool gnss_present() = 0;
+  virtual void gnss_update() = 0;
+
+  virtual GNSSData gnss_read() = 0;
+  virtual bool gnss_has_new_data() = 0;
+  virtual GNSSRaw gnss_raw_read() = 0;
 
 // RC
   virtual void rc_init(rc_type_t rc_type) = 0;
@@ -137,10 +147,14 @@ public:
   virtual void led1_off() = 0;
   virtual void led1_toggle() = 0;
 
+// Battery Voltage
+	virtual bool battery_voltage_present() = 0;
+	virtual void battery_voltage_update() = 0;
+	virtual float battery_voltage_read() = 0;
+	
 // Backup memory
   virtual bool has_backup_data() = 0;
   virtual BackupData get_backup_data() = 0;
-
 };
 
 } // namespace rosflight_firmware

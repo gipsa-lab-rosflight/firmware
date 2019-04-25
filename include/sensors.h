@@ -37,8 +37,85 @@
 #include <stdbool.h>
 #include <turbomath/turbomath.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers" // Ignore warning about leaving struct fields blank
+
 namespace rosflight_firmware
 {
+// Fix type, as defined in sensor_msgs/NavSatStatus
+typedef enum
+{
+  NO_FIX,   // Unable to fix position
+  FIX,      // Unaugmented fix
+  SBAS_FIX, // with satellite-based augmentation
+  GBAS_FIX  // with ground-based augmentation
+} GNSSFixType;
+
+#pragma GCC diagnostic push // Allow anonymous nested unions and structs
+#pragma GCC diagnostic ignored "-Wpedantic"
+
+#define CELL_VOLTAGE_PERCENT_SAMPLES 13
+
+struct GNSSData
+{
+  GNSSFixType fix_type;
+  uint32_t time_of_week;
+  uint64_t time; // Unix time, in seconds
+  uint64_t nanos; // Fractional time
+  int32_t lat; // deg*10^-7
+  int32_t lon; // deg*10^-7
+  int32_t height; // mm
+  int32_t vel_n; // mm/s
+  int32_t vel_e; // mm/s
+  int32_t vel_d; // mm/s
+  uint32_t h_acc; // mm
+  uint32_t v_acc; // mm
+  struct
+  {
+    int32_t x; // cm
+    int32_t y; // cm
+    int32_t z; // cm
+    uint32_t p_acc; // cm
+    int32_t vx; // cm/s
+    int32_t vy; // cm/s
+    int32_t vz; // cm/s
+    uint32_t s_acc; // cm/s
+  } ecef;
+  uint64_t rosflight_timestamp; // microseconds, time stamp of last byte in the message
+};
+
+struct GNSSRaw
+{
+  uint64_t time_of_week;
+  uint16_t year;
+  uint8_t month;
+  uint8_t day;
+  uint8_t hour;
+  uint8_t min;
+  uint8_t sec;
+  uint8_t valid;
+  uint32_t t_acc;
+  int32_t nano;
+  uint8_t fix_type;
+  uint8_t num_sat;
+  int32_t lon;
+  int32_t lat;
+  int32_t height;
+  int32_t height_msl;
+  uint32_t h_acc;
+  uint32_t v_acc;
+  int32_t vel_n;
+  int32_t vel_e;
+  int32_t vel_d;
+  int32_t g_speed;
+  int32_t head_mot;
+  uint32_t s_acc;
+  uint32_t head_acc;
+  uint16_t p_dop;
+  uint64_t rosflight_timestamp; // microseconds, time stamp of last byte in the message
+};
+
+#pragma GCC diagnostic pop
 
 class ROSflight;
 
@@ -66,18 +143,31 @@ public:
     float sonar_range = 0;
     bool sonar_range_valid = false;
 
+    GNSSData gnss_data = {};
+    bool gnss_new_data = false;
+    float gps_CNO = 0; // What is this?
+    bool gnss_present = false;
+    GNSSRaw gnss_raw = {};
+
     turbomath::Vector mag = {0, 0, 0};
 
     bool baro_present = false;
     bool mag_present = false;
     bool sonar_present = false;
     bool diff_pressure_present = false;
+
+		bool voltage_present = false;
+		float voltage = 0.f;
+		float battery_percent = 0.f;
   };
 
-  Sensors(ROSflight& rosflight);
+  Sensors(ROSflight &rosflight);
 
-  inline const Data& data() const { return data_; }
-  void get_filtered_IMU(turbomath::Vector& accel, turbomath::Vector& gyro, uint64_t& stamp_us);
+  inline const Data &data() const
+  {
+    return data_;
+  }
+  void get_filtered_IMU(turbomath::Vector &accel, turbomath::Vector &gyro, uint64_t &stamp_us);
 
   // function declarations
   void init();
@@ -111,7 +201,11 @@ private:
   static const int SENSOR_CAL_CYCLES;
   static const float BARO_MAX_CALIBRATION_VARIANCE;
   static const float DIFF_PRESSURE_MAX_CALIBRATION_VARIANCE;
-
+	
+	static const float CELL_MAX_VOLTAGE;
+	static const float CELL_MIN_VOLTAGE;
+	static const float CELL_PERCENT_VOLTAGE[CELL_VOLTAGE_PERCENT_SAMPLES];
+	
   class OutlierFilter
   {
   private:
@@ -129,13 +223,15 @@ private:
   enum : uint8_t
   {
     BAROMETER,
+    GNSS,
     DIFF_PRESSURE,
     SONAR,
     MAGNETOMETER,
+		BATTERY_VOLTAGE,
     NUM_LOW_PRIORITY_SENSORS
   };
 
-  ROSflight& rf_;
+  ROSflight &rf_;
 
   Data data_;
 
@@ -160,6 +256,7 @@ private:
   uint32_t last_time_look_for_disarmed_sensors_ = 0;
   uint32_t last_imu_update_ms_ = 0;
 
+	
   bool new_imu_data_;
   bool imu_data_sent_;
 
@@ -193,14 +290,18 @@ private:
   uint32_t last_diff_pressure_cal_iter_ms_ = 0;
   float diff_pressure_calibration_mean_ = 0.0f;
   float diff_pressure_calibration_var_ = 0.0f;
-
+	
   // Sensor Measurement Outlier Filters
   OutlierFilter baro_outlier_filt_;
   OutlierFilter diff_outlier_filt_;
   OutlierFilter sonar_outlier_filt_;
 
+	uint32_t last_bat_alert_ms_ = 0;
+	
 };
 
 } // namespace rosflight_firmware
+
+#pragma GCC diagnostic pop // End ignore missing field initializers in structs
 
 #endif // ROSFLIGHT_FIRMWARE_SENSORS_H

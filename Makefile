@@ -32,7 +32,8 @@
 #################################
 # GNU ARM Embedded Toolchain
 #################################
-BOARD  ?= REVO
+BOARD  ?= AIRBOT
+#BOARD  ?= REVO
 
 # Debugger options, must be empty or GDB
 DEBUG ?=
@@ -48,7 +49,7 @@ PARALLEL_JOBS	:= $(shell grep -c ^processor /proc/cpuinfo)
 #################################
 # List of valid boards (update with new boards)
 VALID_F1_BOARDS = NAZE
-VALID_F4_BOARDS = REVO
+VALID_F4_BOARDS = REVO AIRBOT
 
 # Make sure that the supplied board is supported, and if so,
 # set the proper board directory
@@ -76,11 +77,11 @@ endif
 .PHONY: all flash clean
 
 all:
-	cd $(BOARD_DIR) && make -j$(PARALLEL_JOBS) -l$(PARALLEL_JOBS) DEBUG=$(DEBUG) SERIAL_DEVICE=$(SERIAL_DEVICE)
+	cd $(BOARD_DIR) && make -j$(PARALLEL_JOBS) -l$(PARALLEL_JOBS) DEBUG=$(DEBUG) SERIAL_DEVICE=$(SERIAL_DEVICE) BOARD=$(BOARD)
 
 clean:
 	cd boards/airbourne && make clean
 	cd boards/breezy && make clean
 
 flash:
-	cd $(BOARD_DIR) && make -j$(PARALLEL_JOBS) -l$(PARALLEL_JOBS) DEBUG=$(DEBUG) SERIAL_DEVICE=$(SERIAL_DEVICE) flash
+	cd $(BOARD_DIR) && make -j$(PARALLEL_JOBS) -l$(PARALLEL_JOBS) DEBUG=$(DEBUG) SERIAL_DEVICE=$(SERIAL_DEVICE) BOARD=$(BOARD) flash
