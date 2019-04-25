@@ -78,8 +78,8 @@ private:
 
   uint8_t sysid_;
   uint64_t offboard_control_time_;
-  ROSflight& RF_;
-  CommLink& comm_link_;
+  ROSflight &RF_;
+  CommLink &comm_link_;
   uint8_t send_params_index_;
   bool initialized_;
 
@@ -99,13 +99,14 @@ private:
   void update_system_id(uint16_t param_id);
 
   void param_request_list_callback(uint8_t target_system);
-  void param_request_read_callback(uint8_t target_system, const char* const param_name, int16_t param_index);
-  void param_set_int_callback(uint8_t target_system, const char* const param_name, int32_t param_value);
-  void param_set_float_callback(uint8_t target_system, const char* const param_name, float param_value);
+  void param_request_read_callback(uint8_t target_system, const char *const param_name, int16_t param_index);
+  void param_set_int_callback(uint8_t target_system, const char *const param_name, int32_t param_value);
+  void param_set_float_callback(uint8_t target_system, const char *const param_name, float param_value);
   void command_callback(CommLink::Command command);
   void timesync_callback(int64_t tc1, int64_t ts1);
-  void offboard_control_callback(const CommLink::OffboardControl& control);
+  void offboard_control_callback(const CommLink::OffboardControl &control);
   void attitude_correction_callback(const turbomath::Quaternion &q);
+  void heartbeat_callback(void);
 
   void send_heartbeat(void);
   void send_status(void);
@@ -118,9 +119,14 @@ private:
   void send_sonar(void);
   void send_mag(void);
   void send_battery(void);	
+
+  //The time of week stamp for the last sent GNSS message, to prevent re-sending
+  uint32_t last_sent_gnss_tow=0;
+  uint32_t last_sent_gnss_raw_tow=0;
   void send_gnss(void);
   void send_gnss_raw(void);
   void send_low_priority(void);
+  void send_error_data(void);
 
   // Debugging Utils
   void send_named_value_int(const char *const name, int32_t value);
@@ -128,7 +134,8 @@ private:
 
   void send_next_param(void);
 
-  Stream streams_[STREAM_COUNT] = {
+  Stream streams_[STREAM_COUNT] =
+  {
     Stream(0,     [this]{this->send_heartbeat();}),
     Stream(0,     [this]{this->send_status();}),
     Stream(0,     [this]{this->send_attitude();}),
@@ -147,7 +154,7 @@ private:
 
 public:
 
-  CommManager(ROSflight& rf, CommLink& comm_link);
+  CommManager(ROSflight &rf, CommLink &comm_link);
 
   void init();
   void receive(void);

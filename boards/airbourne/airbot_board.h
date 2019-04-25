@@ -59,7 +59,7 @@
 #include "teraranger.h"
 #include "ublox.h"
 #include "analog_input.h"
-
+#include "backup_sram.h"
 #include "board.h"
 
 namespace rosflight_firmware
@@ -199,6 +199,11 @@ public:
 	bool battery_voltage_present() override;
 	void battery_voltage_update() override;
 	float battery_voltage_read() override;
+
+  //Backup Data
+  bool has_backup_data() override;
+  rosflight_firmware::BackupData get_backup_data() override;
+
 };
 
 } // namespace rosflight_firmware

@@ -74,15 +74,24 @@ const float Sensors::CELL_PERCENT_VOLTAGE[CELL_VOLTAGE_PERCENT_SAMPLES] = {
 };
 	
 	
-Sensors::Sensors(ROSflight& rosflight) :
+Sensors::Sensors(ROSflight &rosflight) :
   rf_(rosflight)
 {}
 
 void Sensors::init()
 {
-  rf_.params_.add_callback([this](uint16_t param_id){this->param_change_callback(param_id);}, PARAM_FC_ROLL);
-  rf_.params_.add_callback([this](uint16_t param_id){this->param_change_callback(param_id);}, PARAM_FC_PITCH);
-  rf_.params_.add_callback([this](uint16_t param_id){this->param_change_callback(param_id);}, PARAM_FC_YAW);
+  rf_.params_.add_callback([this](uint16_t param_id)
+  {
+    this->param_change_callback(param_id);
+  }, PARAM_FC_ROLL);
+  rf_.params_.add_callback([this](uint16_t param_id)
+  {
+    this->param_change_callback(param_id);
+  }, PARAM_FC_PITCH);
+  rf_.params_.add_callback([this](uint16_t param_id)
+  {
+    this->param_change_callback(param_id);
+  }, PARAM_FC_YAW);
 
   new_imu_data_ = false;
 
@@ -188,18 +197,24 @@ void Sensors::update_other_sensors()
     break;
 
   case DIFF_PRESSURE:
-    if (rf_.board_.diff_pressure_present())
+    if (rf_.board_.diff_pressure_present() || data_.diff_pressure_present)
     {
-      data_.diff_pressure_present = true;
-      float raw_pressure;
-      float raw_temp;
-      rf_.board_.diff_pressure_update();
-      rf_.board_.diff_pressure_read(&raw_pressure, &raw_temp);
-      data_.diff_pressure_valid = diff_outlier_filt_.update(raw_pressure, &data_.diff_pressure);
-      if (data_.diff_pressure_valid)
+      // if diff_pressure is currently present OR if it has historically been
+      //   present (diff_pressure_present default is false)
+      rf_.board_.diff_pressure_update(); //update assists in recovering sensor if it temporarily disappears
+
+      if (rf_.board_.diff_pressure_present())
       {
-        data_.diff_pressure_temp = raw_temp;
-        correct_diff_pressure();
+        data_.diff_pressure_present = true;
+        float raw_pressure;
+        float raw_temp;
+        rf_.board_.diff_pressure_read(&raw_pressure, &raw_temp);
+        data_.diff_pressure_valid = diff_outlier_filt_.update(raw_pressure, &data_.diff_pressure);
+        if (data_.diff_pressure_valid)
+        {
+          data_.diff_pressure_temp = raw_temp;
+          correct_diff_pressure();
+        }
       }
     }
     break;
@@ -266,24 +281,10 @@ void Sensors::look_for_disabled_sensors()
   if (rf_.board_.clock_millis() > last_time_look_for_disarmed_sensors_ + 1000)
   {
     last_time_look_for_disarmed_sensors_ = rf_.board_.clock_millis();
-    switch (next_sensor_to_look_for_)
-    {
-    case BAROMETER:
-      rf_.board_.baro_update();
-      break;
-    case MAGNETOMETER:
-      rf_.board_.mag_update();
-      break;
-    case DIFF_PRESSURE:
-      rf_.board_.diff_pressure_update();
-      break;
-    case SONAR:
-      rf_.board_.sonar_update();
-      break;
-    default:
-      break;
-    }
-    next_sensor_to_look_for_ = (next_sensor_to_look_for_ + 1) % NUM_LOW_PRIORITY_SENSORS;
+    rf_.board_.baro_update();
+    rf_.board_.mag_update();
+    rf_.board_.diff_pressure_update();
+    rf_.board_.sonar_update();
   }
 }
 
@@ -486,7 +487,7 @@ void Sensors::calibrate_accel(void)
     // the contribution of temperature to the measurements during the calibration,
     // Then we are dividing by the number of measurements.
     turbomath::Vector accel_bias = (acc_sum_ - (accel_temp_bias * acc_temp_sum_)) /
-        static_cast<float>(accel_calibration_count_);
+                                   static_cast<float>(accel_calibration_count_);
 
     // Sanity Check -
     // If the accelerometer is upside down or being spun around during the calibration,
@@ -581,7 +582,7 @@ void Sensors::calibrate_diff_pressure()
   {
     diff_pressure_calibration_count_++;
 
-    if(diff_pressure_calibration_count_ > SENSOR_CAL_DELAY_CYCLES + SENSOR_CAL_CYCLES)
+    if (diff_pressure_calibration_count_ > SENSOR_CAL_DELAY_CYCLES + SENSOR_CAL_CYCLES)
     {
       // if sample variance within acceptable range, flag calibration as done
       // else reset cal variables and start over
@@ -617,11 +618,11 @@ void Sensors::correct_imu(void)
 {
   // correct according to known biases and temperature compensation
   data_.accel.x -= rf_.params_.get_param_float(PARAM_ACC_X_TEMP_COMP)*data_.imu_temperature
-      + rf_.params_.get_param_float(PARAM_ACC_X_BIAS);
+                   + rf_.params_.get_param_float(PARAM_ACC_X_BIAS);
   data_.accel.y -= rf_.params_.get_param_float(PARAM_ACC_Y_TEMP_COMP)*data_.imu_temperature
-      + rf_.params_.get_param_float(PARAM_ACC_Y_BIAS);
+                   + rf_.params_.get_param_float(PARAM_ACC_Y_BIAS);
   data_.accel.z -= rf_.params_.get_param_float(PARAM_ACC_Z_TEMP_COMP)*data_.imu_temperature
-      + rf_.params_.get_param_float(PARAM_ACC_Z_BIAS);
+                   + rf_.params_.get_param_float(PARAM_ACC_Z_BIAS);
 
   data_.gyro.x -= rf_.params_.get_param_float(PARAM_GYRO_X_BIAS);
   data_.gyro.y -= rf_.params_.get_param_float(PARAM_GYRO_Y_BIAS);
@@ -637,14 +638,14 @@ void Sensors::correct_mag(void)
 
   // correct according to known soft iron bias - converts to nT
   data_.mag.x = rf_.params_.get_param_float(PARAM_MAG_A11_COMP)*mag_hard_x + rf_.params_.get_param_float(
-        PARAM_MAG_A12_COMP)*mag_hard_y +
-      rf_.params_.get_param_float(PARAM_MAG_A13_COMP)*mag_hard_z;
+                  PARAM_MAG_A12_COMP)*mag_hard_y +
+                rf_.params_.get_param_float(PARAM_MAG_A13_COMP)*mag_hard_z;
   data_.mag.y = rf_.params_.get_param_float(PARAM_MAG_A21_COMP)*mag_hard_x + rf_.params_.get_param_float(
-        PARAM_MAG_A22_COMP)*mag_hard_y +
-      rf_.params_.get_param_float(PARAM_MAG_A23_COMP)*mag_hard_z;
+                  PARAM_MAG_A22_COMP)*mag_hard_y +
+                rf_.params_.get_param_float(PARAM_MAG_A23_COMP)*mag_hard_z;
   data_.mag.z = rf_.params_.get_param_float(PARAM_MAG_A31_COMP)*mag_hard_x + rf_.params_.get_param_float(
-        PARAM_MAG_A32_COMP)*mag_hard_y +
-      rf_.params_.get_param_float(PARAM_MAG_A33_COMP)*mag_hard_z;
+                  PARAM_MAG_A32_COMP)*mag_hard_y +
+                rf_.params_.get_param_float(PARAM_MAG_A33_COMP)*mag_hard_z;
 }
 
 void Sensors::correct_baro(void)
@@ -664,7 +665,7 @@ void Sensors::correct_diff_pressure()
   if (data_.baro_present)
     atm = data_.baro_pressure;
   data_.diff_pressure_velocity = turbomath::fsign(data_.diff_pressure) * 24.574f /
-      turbomath::inv_sqrt((turbomath::fabs(data_.diff_pressure) * data_.diff_pressure_temp  /  atm));
+                                 turbomath::inv_sqrt((turbomath::fabs(data_.diff_pressure) * data_.diff_pressure_temp  /  atm));
 }
 
 void Sensors::OutlierFilter::init(float max_change_rate, float update_rate, float center)

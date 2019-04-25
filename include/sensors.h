@@ -43,11 +43,12 @@
 namespace rosflight_firmware
 {
 // Fix type, as defined in sensor_msgs/NavSatStatus
-typedef enum{
-    NO_FIX,   // Unable to fix position
-    FIX,      // Unaugmented fix
-    SBAS_FIX, // with satellite-based augmentation
-    GBAS_FIX  // with ground-based augmentation
+typedef enum
+{
+  NO_FIX,   // Unable to fix position
+  FIX,      // Unaugmented fix
+  SBAS_FIX, // with satellite-based augmentation
+  GBAS_FIX  // with ground-based augmentation
 } GNSSFixType;
 
 #pragma GCC diagnostic push // Allow anonymous nested unions and structs
@@ -55,33 +56,36 @@ typedef enum{
 
 #define CELL_VOLTAGE_PERCENT_SAMPLES 13
 
-struct GNSSData{
-    GNSSFixType fix_type;
-    uint32_t time_of_week;
-    uint64_t time; // Unix time, in seconds
-    uint64_t nanos; // Fractional time
-    int32_t lat; // deg*10^-7
-    int32_t lon; // deg*10^-7
-    int32_t height; // mm
-    int32_t vel_n; // mm/s
-    int32_t vel_e; // mm/s
-    int32_t vel_d; // mm/s
-    uint32_t h_acc; // mm
-    uint32_t v_acc; // mm
-    struct {
-        int32_t x; // cm
-        int32_t y; // cm
-        int32_t z; // cm
-        uint32_t p_acc; // cm
-        int32_t vx; // cm/s
-        int32_t vy; // cm/s
-        int32_t vz; // cm/s
-        uint32_t s_acc; // cm/s
-    } ecef;
-    uint64_t rosflight_timestamp; // microseconds, time stamp of last byte in the message
+struct GNSSData
+{
+  GNSSFixType fix_type;
+  uint32_t time_of_week;
+  uint64_t time; // Unix time, in seconds
+  uint64_t nanos; // Fractional time
+  int32_t lat; // deg*10^-7
+  int32_t lon; // deg*10^-7
+  int32_t height; // mm
+  int32_t vel_n; // mm/s
+  int32_t vel_e; // mm/s
+  int32_t vel_d; // mm/s
+  uint32_t h_acc; // mm
+  uint32_t v_acc; // mm
+  struct
+  {
+    int32_t x; // cm
+    int32_t y; // cm
+    int32_t z; // cm
+    uint32_t p_acc; // cm
+    int32_t vx; // cm/s
+    int32_t vy; // cm/s
+    int32_t vz; // cm/s
+    uint32_t s_acc; // cm/s
+  } ecef;
+  uint64_t rosflight_timestamp; // microseconds, time stamp of last byte in the message
 };
 
-struct GNSSRaw{
+struct GNSSRaw
+{
   uint64_t time_of_week;
   uint16_t year;
   uint8_t month;
@@ -139,7 +143,7 @@ public:
     float sonar_range = 0;
     bool sonar_range_valid = false;
 
-    GNSSData gnss_data ={};
+    GNSSData gnss_data = {};
     bool gnss_new_data = false;
     float gps_CNO = 0; // What is this?
     bool gnss_present = false;
@@ -157,10 +161,13 @@ public:
 		float battery_percent = 0.f;
   };
 
-  Sensors(ROSflight& rosflight);
+  Sensors(ROSflight &rosflight);
 
-  inline const Data& data() const { return data_; }
-  void get_filtered_IMU(turbomath::Vector& accel, turbomath::Vector& gyro, uint64_t& stamp_us);
+  inline const Data &data() const
+  {
+    return data_;
+  }
+  void get_filtered_IMU(turbomath::Vector &accel, turbomath::Vector &gyro, uint64_t &stamp_us);
 
   // function declarations
   void init();
@@ -224,7 +231,7 @@ private:
     NUM_LOW_PRIORITY_SENSORS
   };
 
-  ROSflight& rf_;
+  ROSflight &rf_;
 
   Data data_;
 
@@ -234,7 +241,6 @@ private:
   bool calibrating_acc_flag_ = false;
   bool calibrating_gyro_flag_ = false;
   uint8_t next_sensor_to_update_ = BAROMETER;
-  uint8_t next_sensor_to_look_for_ = BAROMETER;
   void init_imu();
   void calibrate_accel(void);
   void calibrate_gyro(void);

@@ -33,6 +33,7 @@
 #define ROSFLIGHT_FIRMWARE_TEST_BOARD_H
 
 #include "board.h"
+#include "sensors.h"
 
 namespace rosflight_firmware
 {
@@ -70,7 +71,7 @@ public:
   uint16_t num_sensor_errors() ;
 
   bool new_imu_data() override;
-  bool imu_read(float accel[3], float *temperature, float gyro[3], uint64_t* time) override;
+  bool imu_read(float accel[3], float *temperature, float gyro[3], uint64_t *time) override;
   void imu_not_responding_error() override;
 
   bool mag_present() override;
@@ -89,10 +90,15 @@ public:
   void sonar_update() override;
   float sonar_read() override;
 
-  bool gnss_present() override { return false; }
+  bool gnss_present() override
+  {
+    return false;
+  }
   void gnss_update() override {}
-  void gnss_read(double* lla, float* vel, uint8_t& fix_type, uint32_t& tow_ms,
-                float *hacc, float *vacc, float* sacc) override;
+  GNSSData gnss_read() override;
+  GNSSRaw gnss_raw_read() override;
+  bool gnss_has_new_data() override;
+
 
 // RC
   void rc_init(rc_type_t rc_type) override;
@@ -118,10 +124,13 @@ public:
   void led1_off() override;
   void led1_toggle() override;
 
+//Backup memory
+  bool has_backup_data() override;
+  BackupData get_backup_data() override;
 
 
-  void set_imu(float* acc, float* gyro, uint64_t time_us);
-  void set_rc(uint16_t* values);
+  void set_imu(float *acc, float *gyro, uint64_t time_us);
+  void set_rc(uint16_t *values);
   void set_time(uint64_t time_us);
   void set_pwm_lost(bool lost);
 

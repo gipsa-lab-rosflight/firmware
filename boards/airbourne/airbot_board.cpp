@@ -400,6 +400,17 @@ void AirbotBoard::battery_voltage_update()
 	
 float AirbotBoard::battery_voltage_read() {return battery_voltage_;}
 
+//Backup memory
+bool AirbotBoard::has_backup_data()
+{
+  BackupData backup_data = backup_sram_read();
+  return (check_backup_checksum(backup_data) && backup_data.error_code!=0);
+}
+rosflight_firmware::BackupData AirbotBoard::get_backup_data()
+{
+  return backup_sram_read();
+}
+
 } // namespace rosflight_firmware
 
 extern "C"

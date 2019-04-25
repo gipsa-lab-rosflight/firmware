@@ -131,8 +131,8 @@ AIRBOURNE_SRCS = led.cpp \
                  teraranger.cpp \
                  ublox.cpp \
                  adc.cpp \
-                 analog_input.cpp
-
+                 analog_input.cpp \
+								 backup_sram.cpp
 
 # board-specific source files
 VPATH           := $(VPATH):$(BOARD_DIR)

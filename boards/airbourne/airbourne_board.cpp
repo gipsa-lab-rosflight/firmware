@@ -50,6 +50,8 @@ void AirbourneBoard::init_board()
   spi3_.init(&spi_config[FLASH_SPI]);
   uart3_.init(&uart_config[UART3], 115200, UART::MODE_8N1);
 
+  backup_sram_init();
+
   current_serial_ = &vcp_;    //uncomment this to switch to VCP as the main output
 }
 
@@ -134,7 +136,7 @@ void AirbourneBoard::serial_flush()
 // sensors
 void AirbourneBoard::sensors_init()
 {
-  while(millis() < 50) {} // wait for sensors to boot up
+  while (millis() < 50) {} // wait for sensors to boot up
   imu_.init(&spi1_, MPU6000_CS_GPIO, MPU6000_CS_PIN);
 
   baro_.init(&int_i2c_);
@@ -154,7 +156,7 @@ bool AirbourneBoard::new_imu_data()
   return imu_.new_data();
 }
 
-bool AirbourneBoard::imu_read(float accel[3], float* temperature, float gyro[3], uint64_t* time_us)
+bool AirbourneBoard::imu_read(float accel[3], float *temperature, float gyro[3], uint64_t *time_us)
 {
   float read_accel[3], read_gyro[3];
   imu_.read(read_accel, read_gyro, temperature, time_us);
@@ -246,11 +248,14 @@ bool AirbourneBoard::gnss_present()
 {
   return gnss_.present();
 }
-void AirbourneBoard::gnss_update(){}
+void AirbourneBoard::gnss_update() {}
 bool AirbourneBoard::gnss_has_new_data()
 {
   return this->gnss_.new_data();
 }
+//This method translates the UBLOX driver interface into the ROSFlight interface
+//If not gnss_has_new_data(), then this may return 0's for ECEF position data,
+//ECEF velocity data, or both
 GNSSData AirbourneBoard::gnss_read()
 {
   UBLOX::GNSSPVT gnss_pvt= gnss_.read();
@@ -268,14 +273,24 @@ GNSSData AirbourneBoard::gnss_read()
   gnss.vel_d = gnss_pvt.vel_d;
   gnss.h_acc = gnss_pvt.h_acc;
   gnss.v_acc = gnss_pvt.v_acc;
-  gnss.ecef.x = pos_ecef.x;
-  gnss.ecef.y = pos_ecef.y;
-  gnss.ecef.z = pos_ecef.z;
-  gnss.ecef.p_acc = pos_ecef.p_acc;
-  gnss.ecef.vx = vel_ecef.vx;
-  gnss.ecef.vy = vel_ecef.vy;
-  gnss.ecef.vz = vel_ecef.vz;
-  gnss.ecef.s_acc = vel_ecef.s_acc;
+  //Does not include ECEF position data if the timestamp doesn't match
+  //See UBLOX::new_data() for reasoning
+  if (gnss.time_of_week == pos_ecef.time_of_week)
+  {
+    gnss.ecef.x = pos_ecef.x;
+    gnss.ecef.y = pos_ecef.y;
+    gnss.ecef.z = pos_ecef.z;
+    gnss.ecef.p_acc = pos_ecef.p_acc;
+  }
+  //Does not include ECEF position data if the timestamp doesn't match
+  //See UBLOX::new_data() for reasoning
+  if (gnss.time_of_week == vel_ecef.time_of_week)
+  {
+    gnss.ecef.vx = vel_ecef.vx;
+    gnss.ecef.vy = vel_ecef.vy;
+    gnss.ecef.vz = vel_ecef.vz;
+    gnss.ecef.s_acc = vel_ecef.s_acc;
+  }
 
   return gnss;
 }
@@ -370,29 +385,58 @@ void AirbourneBoard::memory_init()
   return flash_.init(&spi3_);
 }
 
-bool AirbourneBoard::memory_read(void * data, size_t len)
+bool AirbourneBoard::memory_read(void *data, size_t len)
 {
-  return flash_.read_config(reinterpret_cast<uint8_t*>(data), len);
+  return flash_.read_config(reinterpret_cast<uint8_t *>(data), len);
 }
 
-bool AirbourneBoard::memory_write(const void * data, size_t len)
+bool AirbourneBoard::memory_write(const void *data, size_t len)
 {
-  return flash_.write_config(reinterpret_cast<const uint8_t*>(data), len);
+  return flash_.write_config(reinterpret_cast<const uint8_t *>(data), len);
 }
 
 // LED
-void AirbourneBoard::led0_on() { led1_.on(); }
-void AirbourneBoard::led0_off() { led1_.off(); }
-void AirbourneBoard::led0_toggle() { led1_.toggle(); }
+void AirbourneBoard::led0_on()
+{
+  led1_.on();
+}
+void AirbourneBoard::led0_off()
+{
+  led1_.off();
+}
+void AirbourneBoard::led0_toggle()
+{
+  led1_.toggle();
+}
 
-void AirbourneBoard::led1_on() { led2_.on(); }
-void AirbourneBoard::led1_off() { led2_.off(); }
-void AirbourneBoard::led1_toggle() { led2_.toggle(); }
+void AirbourneBoard::led1_on()
+{
+  led2_.on();
+}
+void AirbourneBoard::led1_off()
+{
+  led2_.off();
+}
+void AirbourneBoard::led1_toggle()
+{
+  led2_.toggle();
+}
 
 // Battery voltage
 bool AirbourneBoard::battery_voltage_present() {return false;}
 void AirbourneBoard::battery_voltage_update(){}
 float AirbourneBoard::battery_voltage_read() {return 0.f;}
+
+//Backup memory
+bool AirbourneBoard::has_backup_data()
+{
+  BackupData backup_data = backup_sram_read();
+  return (check_backup_checksum(backup_data) && backup_data.error_code!=0);
+}
+rosflight_firmware::BackupData AirbourneBoard::get_backup_data()
+{
+  return backup_sram_read();
+}
 
 } // namespace rosflight_firmware
 
