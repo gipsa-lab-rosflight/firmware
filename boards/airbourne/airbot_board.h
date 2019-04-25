@@ -29,14 +29,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSFLIGHT_FIRMWARE_AIRBOURNE_BOARD_H
-#define ROSFLIGHT_FIRMWARE_AIRBOURNE_BOARD_H
+#ifndef ROSFLIGHT_FIRMWARE_AIRBOT_BOARD_H
+#define ROSFLIGHT_FIRMWARE_AIRBOT_BOARD_H
 
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <revo_f4.h>
+#include <airbot_f4.h>
 
 #include "vcp.h"
 #include "uart.h"
@@ -56,19 +56,21 @@
 #include "system.h"
 #include "uart.h"
 #include "mb1242.h"
+#include "teraranger.h"
 #include "ublox.h"
+#include "analog_input.h"
 
 #include "board.h"
 
 namespace rosflight_firmware
 {
 
-class AirbourneBoard : public Board
+class AirbotBoard : public Board
 {
 
 private:
     VCP vcp_;
-    UART uart3_;
+    UART uart1_;
     Serial* current_serial_;//A pointer to the serial stream currently in use.
     I2C int_i2c_;
     I2C ext_i2c_;
@@ -79,7 +81,7 @@ private:
     MS5611 baro_;
     MS4525 airspeed_;
     RC_PPM rc_ppm_;
-    I2CSonar sonar_;
+    TeraRanger sonar_;
     RC_SBUS rc_sbus_;
     UART sbus_uart_;
     GPIO inv_pin_;
@@ -88,11 +90,12 @@ private:
     LED led1_;
     M25P16 flash_;
     UBLOX gnss_;
-
+		AnalogInput voltage_input_;
+		
     enum SerialDevice : uint32_t
     {
       SERIAL_DEVICE_VCP = 0,
-      SERIAL_DEVICE_UART3 = 3
+      SERIAL_DEVICE_UART1 = 1
     };
     SerialDevice secondary_serial_device_ = SERIAL_DEVICE_VCP;
 
@@ -116,8 +119,10 @@ private:
     bool new_imu_data_;
     uint64_t imu_time_us_;
 
+		float battery_voltage_ = 0.f;
+		
 public:
-  AirbourneBoard();
+  AirbotBoard();
 
   // setup
   void init_board() override;
@@ -198,4 +203,4 @@ public:
 
 } // namespace rosflight_firmware
 
-#endif // ROSFLIGHT_FIRMWARE_AIRBOURNE_BOARD_H
+#endif // ROSFLIGHT_FIRMWARE_AIRBOT_BOARD_H

@@ -76,6 +76,7 @@ void CommManager::init()
   RF_.params_.add_callback([this](int16_t param_id){this->set_streaming_rate(STREAM_ID_GNSS, param_id);}, PARAM_STREAM_GNSS_RATE);
   RF_.params_.add_callback([this](int16_t param_id){this->set_streaming_rate(STREAM_ID_GNSS_RAW, param_id);}, PARAM_STREAM_GNSS_RAW_RATE);
   RF_.params_.add_callback([this](int16_t param_id){this->set_streaming_rate(STREAM_ID_MAG, param_id);}, PARAM_STREAM_MAG_RATE);
+  RF_.params_.add_callback([this](int16_t param_id){this->set_streaming_rate(STREAM_ID_BATTERY, param_id);}, PARAM_STREAM_BATTERY_RATE);
   RF_.params_.add_callback([this](int16_t param_id){this->set_streaming_rate(STREAM_ID_SERVO_OUTPUT_RAW, param_id);}, PARAM_STREAM_OUTPUT_RAW_RATE);
   RF_.params_.add_callback([this](int16_t param_id){this->set_streaming_rate(STREAM_ID_RC_RAW, param_id);}, PARAM_STREAM_RC_RAW_RATE);
 
@@ -413,6 +414,14 @@ void CommManager::send_mag(void)
 {
   if (RF_.sensors_.data().mag_present)
     comm_link_.send_mag(sysid_, RF_.sensors_.data().mag);
+}
+
+void CommManager::send_battery(void)
+{
+  if (RF_.sensors_.data().voltage_present)
+	{
+    comm_link_.send_battery(sysid_, RF_.sensors_.data().voltage, RF_.sensors_.data().battery_percent);
+	}
 }
 
 void CommManager::send_gnss(void)

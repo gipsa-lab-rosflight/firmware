@@ -128,13 +128,24 @@ AIRBOURNE_SRCS = led.cpp \
                  uart.cpp \
                  M25P16.cpp \
                  ms4525.cpp \
-                 ublox.cpp
+                 teraranger.cpp \
+                 ublox.cpp \
+                 adc.cpp \
+                 analog_input.cpp
 
 
 # board-specific source files
 VPATH           := $(VPATH):$(BOARD_DIR)
-BOARD_CXX_SRC   = airbourne_board.cpp \
-                  main.cpp
+ifeq ($(BOARD), REVO)
+	BOARD_CXX_SRC   = airbourne_board.cpp \
+	                  main.cpp
+endif
+
+ifeq ($(BOARD), AIRBOT)
+	BOARD_CXX_SRC   = airbot_board.cpp \
+	                  main_airbot.cpp
+endif
+
 
 # Make a list of source files and includes
 VPATH   := $(VPATH):$(SRC_DIR)

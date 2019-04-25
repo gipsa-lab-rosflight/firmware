@@ -382,6 +382,10 @@ void BreezyBoard::led1_on() { LED1_ON; }
 void BreezyBoard::led1_off() { LED1_OFF; }
 void BreezyBoard::led1_toggle() { LED1_TOGGLE; }
 
+bool BreezyBoard::battery_voltage_present() {return false;}
+void BreezyBoard::battery_voltage_update() {}
+float BreezyBoard::battery_voltage_read() {return 0.f;}
+
 }
 
 #pragma GCC diagnostic pop

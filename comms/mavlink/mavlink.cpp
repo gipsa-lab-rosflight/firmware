@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2017, James Jackson and Daniel Koch, BYU MAGICC Lab
  *
  * All rights reserved.
@@ -372,6 +372,13 @@ void Mavlink::send_version(uint8_t system_id, const char * const version)
   mavlink_message_t msg;
   mavlink_msg_rosflight_version_pack(system_id, compid_, &msg, version);
   send_message(msg);
+}
+
+void Mavlink::send_battery(uint8_t system_id, float voltage, float percent)
+{
+	mavlink_message_t msg;
+	mavlink_msg_small_battery_pack(system_id, compid_, &msg, voltage, percent);
+	send_message(msg);
 }
 
 void Mavlink::send_message(const mavlink_message_t &msg)

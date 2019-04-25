@@ -55,6 +55,25 @@ const int Sensors::SENSOR_CAL_CYCLES = 127;
 const float Sensors::BARO_MAX_CALIBRATION_VARIANCE = 25.0;   // standard dev about 0.2 m
 const float Sensors::DIFF_PRESSURE_MAX_CALIBRATION_VARIANCE = 100.0;   // standard dev about 3 m/s
 
+const float Sensors::CELL_MAX_VOLTAGE = 4.2f;
+const float Sensors::CELL_MIN_VOLTAGE = 3.f;
+const float Sensors::CELL_PERCENT_VOLTAGE[CELL_VOLTAGE_PERCENT_SAMPLES] = {
+	  0.,
+		0.016,
+		0.03, 
+		0.05,
+		0.07,
+		0.08,
+		0.1,
+		0.2,
+		0.42,
+		0.66,
+		0.82,
+		0.9,
+		1
+};
+	
+	
 Sensors::Sensors(ROSflight& rosflight) :
   rf_(rosflight)
 {}
@@ -195,6 +214,42 @@ void Sensors::update_other_sensors()
       data_.sonar_range_valid = sonar_outlier_filt_.update(raw_distance, &data_.sonar_range);
     }
     break;
+	case BATTERY_VOLTAGE:
+		if(rf_.board_.battery_voltage_present())
+		{
+			data_.voltage_present = true;
+			rf_.board_.battery_voltage_update();
+			data_.voltage = rf_.board_.battery_voltage_read();
+			int cells = rf_.params_.get_param_int(PARAM_BATTERY_CELLS);
+			float cell_v = data_.voltage/cells;
+
+			if(cell_v >= CELL_MAX_VOLTAGE)
+			{
+				data_.battery_percent = 1.;
+			}else if(cell_v <= CELL_MIN_VOLTAGE)
+			{
+				data_.battery_percent = 0.;				
+			}else
+			{
+				// TODO interpolate
+				float v = (cell_v-CELL_MIN_VOLTAGE) * (CELL_VOLTAGE_PERCENT_SAMPLES-1) / (CELL_MAX_VOLTAGE-CELL_MIN_VOLTAGE);
+				int i = v;
+				float p = v-i;
+				data_.battery_percent = (1.f-p)*CELL_PERCENT_VOLTAGE[i]+p*CELL_PERCENT_VOLTAGE[i+1];
+			}
+			
+			
+			if(data_.battery_percent < 0.2f)
+			{
+				uint32_t ms = rf_.board_.clock_millis();
+				if( ms > last_bat_alert_ms_ + 5000)
+				{
+					last_bat_alert_ms_ = ms;
+					rf_.comm_manager_.log(CommLink::LogSeverity::LOG_WARNING, "BATTERY LOW [ %d%% ]", (int)(100*data_.battery_percent));
+				}
+			}
+		}
+		break;
   default:
     break;
   }

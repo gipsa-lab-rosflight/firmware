@@ -71,6 +71,7 @@ enum : uint16_t
   PARAM_STREAM_SONAR_RATE,
   PARAM_STREAM_GNSS_RATE,
   PARAM_STREAM_GNSS_RAW_RATE,
+	PARAM_STREAM_BATTERY_RATE,
 
   PARAM_STREAM_OUTPUT_RAW_RATE,
   PARAM_STREAM_RC_RAW_RATE,
@@ -215,6 +216,11 @@ enum : uint16_t
   /************************/
   PARAM_OFFBOARD_TIMEOUT,
 
+	/*****************************/
+	/*** BATTERY CONFIGURATION ***/
+	/*****************************/
+	PARAM_BATTERY_CELLS,
+	
   // keep track of size of params array
   PARAMS_COUNT
 };

@@ -150,6 +150,8 @@ public:
                               int32_t vel_d, int32_t g_speed, int32_t head_mot, uint32_t s_acc,
                               uint32_t head_acc, uint16_t p_dop, uint64_t rosflight_timestamp) = 0;
 
+	virtual void send_battery(uint8_t system_id, float voltage, float percent) = 0;
+	
   // register callbacks
 
   void register_param_request_list_callback(std::function<void(uint8_t /* target_system */)> callback)

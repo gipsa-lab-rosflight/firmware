@@ -117,10 +117,12 @@ void Params::set_defaults(void)
   init_param_int(PARAM_STREAM_SONAR_RATE, "STRM_SONAR", 40); // Rate of sonar stream (Hz) | 0 | 40
   init_param_int(PARAM_STREAM_GNSS_RATE, "STRM_GNSS", 10); // Rate of GNSS stream (Hz) | 0 | 10
   init_param_int(PARAM_STREAM_GNSS_RAW_RATE, "STRM_GNSS_RAW", 0); //Rate of GNSS raw stream (Hz) | 0 | 10
+  init_param_int(PARAM_STREAM_BATTERY_RATE, "STRM_BAT", 1); // Rate of battery voltage stream | 0 | 10
 
   init_param_int(PARAM_STREAM_OUTPUT_RAW_RATE, "STRM_SERVO", 50); // Rate of raw output stream | 0 |  490
   init_param_int(PARAM_STREAM_RC_RAW_RATE, "STRM_RC", 50); // Rate of raw RC input stream | 0 | 50
 
+	
   /********************************/
   /*** CONTROLLER CONFIGURATION ***/
   /********************************/
@@ -261,6 +263,11 @@ void Params::set_defaults(void)
   /*** OFFBOARD CONTROL ***/
   /************************/
   init_param_int(PARAM_OFFBOARD_TIMEOUT, "OFFBOARD_TIMEOUT", 100); // Timeout in milliseconds for offboard commands, after which RC override is activated | 0 | 100000
+
+	/*****************************/
+	/*** BATTERY CONFIGURATION ***/
+	/*****************************/
+	init_param_int(PARAM_BATTERY_CELLS, "BATTERY_CELLS", 4); // number of battery cells
 }
 
 void Params::add_callback(std::function<void(int)> callback, uint16_t param_id)

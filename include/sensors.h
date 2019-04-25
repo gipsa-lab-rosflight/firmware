@@ -53,6 +53,8 @@ typedef enum{
 #pragma GCC diagnostic push // Allow anonymous nested unions and structs
 #pragma GCC diagnostic ignored "-Wpedantic"
 
+#define CELL_VOLTAGE_PERCENT_SAMPLES 13
+
 struct GNSSData{
     GNSSFixType fix_type;
     uint32_t time_of_week;
@@ -149,6 +151,10 @@ public:
     bool mag_present = false;
     bool sonar_present = false;
     bool diff_pressure_present = false;
+
+		bool voltage_present = false;
+		float voltage = 0.f;
+		float battery_percent = 0.f;
   };
 
   Sensors(ROSflight& rosflight);
@@ -188,7 +194,11 @@ private:
   static const int SENSOR_CAL_CYCLES;
   static const float BARO_MAX_CALIBRATION_VARIANCE;
   static const float DIFF_PRESSURE_MAX_CALIBRATION_VARIANCE;
-
+	
+	static const float CELL_MAX_VOLTAGE;
+	static const float CELL_MIN_VOLTAGE;
+	static const float CELL_PERCENT_VOLTAGE[CELL_VOLTAGE_PERCENT_SAMPLES];
+	
   class OutlierFilter
   {
   private:
@@ -210,6 +220,7 @@ private:
     DIFF_PRESSURE,
     SONAR,
     MAGNETOMETER,
+		BATTERY_VOLTAGE,
     NUM_LOW_PRIORITY_SENSORS
   };
 
@@ -239,6 +250,7 @@ private:
   uint32_t last_time_look_for_disarmed_sensors_ = 0;
   uint32_t last_imu_update_ms_ = 0;
 
+	
   bool new_imu_data_;
   bool imu_data_sent_;
 
@@ -272,12 +284,14 @@ private:
   uint32_t last_diff_pressure_cal_iter_ms_ = 0;
   float diff_pressure_calibration_mean_ = 0.0f;
   float diff_pressure_calibration_var_ = 0.0f;
-
+	
   // Sensor Measurement Outlier Filters
   OutlierFilter baro_outlier_filt_;
   OutlierFilter diff_outlier_filt_;
   OutlierFilter sonar_outlier_filt_;
 
+	uint32_t last_bat_alert_ms_ = 0;
+	
 };
 
 } // namespace rosflight_firmware

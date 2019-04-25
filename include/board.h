@@ -123,6 +123,11 @@ public:
   virtual void led1_off() = 0;
   virtual void led1_toggle() = 0;
 
+// Battery Voltage
+	virtual bool battery_voltage_present() = 0;
+	virtual void battery_voltage_update() = 0;
+	virtual float battery_voltage_read() = 0;
+	
 };
 
 } // namespace rosflight_firmware

@@ -152,6 +152,11 @@ public:
   void led1_on() override;
   void led1_off() override;
   void led1_toggle() override;
+
+	// Battery Voltage
+	bool battery_voltage_present() override;
+	void battery_voltage_update() override;
+	float battery_voltage_read() override;
 };
 
 } // namespace rosflight_firmware
