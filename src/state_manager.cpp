@@ -41,6 +41,7 @@ StateManager::StateManager(ROSflight &parent) :
   state_.armed = false;
   state_.error = false;
   state_.failsafe = false;
+	state_.battery_low = false;
   state_.error_codes = 0x00;
 }
 
@@ -51,6 +52,8 @@ void StateManager::init()
 
   // Initialize LEDs
   RF_.board_.led1_off();
+  RF_.board_.led0_on();
+	
   if (RF_.board_.has_backup_data())
   {
     rosflight_firmware::BackupData error_data=RF_.board_.get_backup_data();
@@ -68,6 +71,7 @@ void StateManager::run()
   // this with a recursive call to process_errors() if the state changed in update_fsm()?
   process_errors(); // check for any error events
   update_leds();
+	update_battery_msg();
 }
 
 void StateManager::set_error(uint16_t error)
@@ -95,6 +99,16 @@ void StateManager::clear_error(uint16_t error)
   }
 }
 
+void StateManager::set_battery_low()
+{
+	state_.battery_low = true;
+}
+	
+void StateManager::unset_battery_low()
+{
+	state_.battery_low = false;	
+}
+	
 void StateManager::set_event(StateManager::Event event)
 {
   FsmState start_state = fsm_state_;
@@ -284,7 +298,7 @@ void StateManager::process_errors()
 }
 
 void StateManager::update_leds()
-{
+{	
   // blink fast if in failsafe
   if (state_.failsafe)
   {
@@ -308,6 +322,39 @@ void StateManager::update_leds()
     RF_.board_.led1_off();
   else
     RF_.board_.led1_on();
+
+	// blink led0 slowly if battery is low
+	if (state_.battery_low)
+	{
+    if (next_led0_blink_ms_ < RF_.board_.clock_millis())
+    {
+			if(led0_state)
+			{
+				next_led0_blink_ms_ =  RF_.board_.clock_millis() + 100;
+			}else{
+				next_led0_blink_ms_ =  RF_.board_.clock_millis() + 1000;				
+			}
+      RF_.board_.led0_toggle();
+			led0_state = !led0_state;
+    }		
+	}else if((!led0_state) && next_led0_blink_ms_ < RF_.board_.clock_millis()){
+		RF_.board_.led0_on();
+		next_led0_blink_ms_ =  RF_.board_.clock_millis() + 1000;
+		led0_state = true;
+	}
+
 }
 
+void StateManager::update_battery_msg()
+{
+	if (state_.battery_low)
+	{
+    if (next_bat_low_msg_ms_ < RF_.board_.clock_millis())
+    {
+			RF_.comm_manager_.log(CommLink::LogSeverity::LOG_WARNING, "Battery low");
+			next_bat_low_msg_ms_ =  RF_.board_.clock_millis() + 5000;
+    }
+	}
+}
+	
 } //namespace rosflight_firmware

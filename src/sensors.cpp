@@ -252,17 +252,6 @@ void Sensors::update_other_sensors()
 				float p = v-i;
 				data_.battery_percent = (1.f-p)*CELL_PERCENT_VOLTAGE[i]+p*CELL_PERCENT_VOLTAGE[i+1];
 			}
-			
-			
-			if(data_.battery_percent < 0.2f)
-			{
-				uint32_t ms = rf_.board_.clock_millis();
-				if( ms > last_bat_alert_ms_ + 5000)
-				{
-					last_bat_alert_ms_ = ms;
-					rf_.comm_manager_.log(CommLink::LogSeverity::LOG_WARNING, "BATTERY LOW [ %d%% ]", (int)(100*data_.battery_percent));
-				}
-			}
 		}
 		break;
   default:

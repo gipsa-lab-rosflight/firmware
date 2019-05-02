@@ -103,7 +103,7 @@ void ROSflight::run()
     mixer_.mix_output();
     loop_time_us = board_.clock_micros() - start;
   }
-
+	
   /*********************/
   /***  Post-Process ***/
   /*********************/
@@ -113,6 +113,14 @@ void ROSflight::run()
   // receive mavlink messages
   comm_manager_.receive();
 
+	// check battery
+	if(sensors_.data().voltage_present && sensors_.data().battery_percent<0.2f)
+	{
+		state_manager_.set_battery_low();
+	} else {
+		state_manager_.unset_battery_low();		
+	}
+	
   // update the state machine, an internal timer runs this at a fixed rate
   state_manager_.run();
 

@@ -295,8 +295,6 @@ private:
   OutlierFilter baro_outlier_filt_;
   OutlierFilter diff_outlier_filt_;
   OutlierFilter sonar_outlier_filt_;
-
-	uint32_t last_bat_alert_ms_ = 0;
 	
 };
 

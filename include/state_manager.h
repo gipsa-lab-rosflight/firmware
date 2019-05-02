@@ -48,6 +48,7 @@ public:
     bool armed;
     bool failsafe;
     bool error;
+		bool battery_low;
     uint16_t error_codes;
   };
 
@@ -88,12 +89,18 @@ public:
   void set_error(uint16_t error);
   void clear_error(uint16_t error);
 
+	void set_battery_low();
+	void unset_battery_low();
+	
 private:
   ROSflight &RF_;
   State state_;
 
   uint32_t next_led_blink_ms_ = 0;
   uint32_t next_arming_error_msg_ms_ = 0;
+	uint32_t next_bat_low_msg_ms_ = 0;
+  uint32_t next_led0_blink_ms_ = 0;
+	bool led0_state = true;
 
   enum FsmState
   {
@@ -109,6 +116,8 @@ private:
   void process_errors();
 
   void update_leds();
+
+	void update_battery_msg();
 };
 
 } // namespace rosflight_firmware
