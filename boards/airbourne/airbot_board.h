@@ -70,7 +70,7 @@ class AirbotBoard : public Board
 
 private:
     VCP vcp_;
-    UART uart1_;
+    UART uart1_, uart6_;
     Serial* current_serial_;//A pointer to the serial stream currently in use.
     I2C int_i2c_;
     I2C ext_i2c_;
@@ -95,7 +95,8 @@ private:
     enum SerialDevice : uint32_t
     {
       SERIAL_DEVICE_VCP = 0,
-      SERIAL_DEVICE_UART1 = 1
+			SERIAL_DEVICE_UART1 = 1,
+      SERIAL_DEVICE_UART6 = 2
     };
     SerialDevice secondary_serial_device_ = SERIAL_DEVICE_VCP;
 

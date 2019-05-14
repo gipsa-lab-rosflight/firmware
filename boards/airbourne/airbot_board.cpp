@@ -52,6 +52,7 @@ void AirbotBoard::init_board()
   spi1_.init(&spi_config[MPU6000_SPI]);
   spi3_.init(&spi_config[FLASH_SPI]);
   uart1_.init(&uart_config[UART1], 115200, UART::MODE_8N1);
+  uart6_.init(&uart_config[UART6], 115200, UART::MODE_8N1);
 	
   current_serial_ = &vcp_;    //uncomment this to switch to VCP as the main output
 }
@@ -89,6 +90,11 @@ void AirbotBoard::serial_init(uint32_t baud_rate, uint32_t dev)
     current_serial_ = &uart1_;
     secondary_serial_device_ = SERIAL_DEVICE_UART1;
     break;
+  case SERIAL_DEVICE_UART6:
+    uart6_.init(&uart_config[UART6], baud_rate);
+    current_serial_ = &uart6_;
+    secondary_serial_device_ = SERIAL_DEVICE_UART6;
+    break;
   default:
     current_serial_ = &vcp_;
     secondary_serial_device_ = SERIAL_DEVICE_VCP;
@@ -112,6 +118,9 @@ uint16_t AirbotBoard::serial_bytes_available()
     {
     case SERIAL_DEVICE_UART1:
       current_serial_ = &uart1_;
+      break;
+    case SERIAL_DEVICE_UART6:
+      current_serial_ = &uart6_;
       break;
     default:
       // no secondary serial device
