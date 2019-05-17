@@ -153,6 +153,8 @@ public:
                              uint32_t head_acc, uint16_t p_dop, uint64_t rosflight_timestamp) = 0;
   virtual void send_error_data(uint8_t system_id, const BackupData &error_data) = 0;
 
+	virtual void send_multi_range(uint8_t system_id, uint8_t nb_ranges, const uint16_t* ranges) = 0;
+	
 	virtual void send_battery(uint8_t system_id, float voltage, float percent) = 0;
 	
   // register callbacks

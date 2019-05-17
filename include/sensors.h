@@ -115,6 +115,13 @@ struct GNSSRaw
   uint64_t rosflight_timestamp; // microseconds, time stamp of last byte in the message
 };
 
+#define MULTI_RANGE_MAX_RANGES 16
+struct MultiRangeData
+{
+	uint8_t nbRanges;
+	uint16_t ranges[MULTI_RANGE_MAX_RANGES];
+};
+
 #pragma GCC diagnostic pop
 
 class ROSflight;
@@ -156,6 +163,9 @@ public:
     bool sonar_present = false;
     bool diff_pressure_present = false;
 
+		bool multi_range_present = false;
+		MultiRangeData multi_range_data;
+		
 		bool voltage_present = false;
 		float voltage = 0.f;
 		float battery_percent = 0.f;
@@ -227,6 +237,7 @@ private:
     DIFF_PRESSURE,
     SONAR,
     MAGNETOMETER,
+		MULTI_RANGE,
 		BATTERY_VOLTAGE,
     NUM_LOW_PRIORITY_SENSORS
   };

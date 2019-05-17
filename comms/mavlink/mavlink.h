@@ -107,6 +107,7 @@ public:
                      uint32_t h_acc, uint32_t v_acc, int32_t vel_n, int32_t vel_e,
                      int32_t vel_d, int32_t g_speed, int32_t head_mot, uint32_t s_acc,
                      uint32_t head_acc, uint16_t p_dop, uint64_t rosflight_timestamp);
+	void send_multi_range(uint8_t system_id, uint8_t nb_ranges, const uint16_t* ranges) override;
 	void send_battery(uint8_t system_id, float voltage, float percent) override;
   void send_error_data(uint8_t system_id, const BackupData &error_data);
 

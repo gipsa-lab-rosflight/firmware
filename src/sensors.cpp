@@ -229,6 +229,18 @@ void Sensors::update_other_sensors()
       data_.sonar_range_valid = sonar_outlier_filt_.update(raw_distance, &data_.sonar_range);
     }
     break;
+	case MULTI_RANGE:
+		if(rf_.board_.multi_range_present())
+		{
+			data_.multi_range_present = true;
+			rf_.board_.multi_range_update();
+			if(rf_.board_.multi_range_has_new_data())
+			{
+				data_.multi_range_data.nbRanges = rf_.board_.multi_range_get_nb_sensors();
+				rf_.board_.multi_range_read(data_.multi_range_data.ranges);
+			}
+		}
+		break;
 	case BATTERY_VOLTAGE:
 		if(rf_.board_.battery_voltage_present())
 		{

@@ -52,7 +52,12 @@ void StateManager::init()
 
   // Initialize LEDs
   RF_.board_.led1_off();
-  RF_.board_.led0_on();
+  RF_.board_.led0_off();
+
+	// Initialize buzzer
+  RF_.board_.buzzer_off();
+	
+	buzzer_state_ = false;
 	
   if (RF_.board_.has_backup_data())
   {
@@ -323,24 +328,26 @@ void StateManager::update_leds()
   else
     RF_.board_.led1_on();
 
-	// blink led0 slowly if battery is low
+	// blink buzzer slowly if battery is low
 	if (state_.battery_low)
 	{
-    if (next_led0_blink_ms_ < RF_.board_.clock_millis())
+    if (next_buzzer_blink_ms_ < RF_.board_.clock_millis())
     {
-			if(led0_state)
+			if(buzzer_state_)
 			{
-				next_led0_blink_ms_ =  RF_.board_.clock_millis() + 100;
+				next_buzzer_blink_ms_ =  RF_.board_.clock_millis() + 1000;
+				RF_.board_.buzzer_off();
 			}else{
-				next_led0_blink_ms_ =  RF_.board_.clock_millis() + 1000;				
+				next_buzzer_blink_ms_ =  RF_.board_.clock_millis() + 100;				
+				RF_.board_.buzzer_on();
 			}
-      RF_.board_.led0_toggle();
-			led0_state = !led0_state;
-    }		
-	}else if((!led0_state) && next_led0_blink_ms_ < RF_.board_.clock_millis()){
-		RF_.board_.led0_on();
-		next_led0_blink_ms_ =  RF_.board_.clock_millis() + 1000;
-		led0_state = true;
+      
+			buzzer_state_ = !buzzer_state_;
+    }
+	}else if(buzzer_state_ && next_buzzer_blink_ms_ < RF_.board_.clock_millis()){
+		RF_.board_.buzzer_off();
+		next_buzzer_blink_ms_ =  RF_.board_.clock_millis() + 1000;
+		buzzer_state_ = false;
 	}
 
 }

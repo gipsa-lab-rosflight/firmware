@@ -284,7 +284,9 @@ void RC::look_for_arm_disarm_signal()
     if (RF_.rc_.switch_on(SWITCH_ARM))
     {
       if (!RF_.state_manager_.state().armed)
-        RF_.state_manager_.set_event(StateManager::EVENT_REQUEST_ARM);;
+			{
+        RF_.state_manager_.set_event(StateManager::EVENT_REQUEST_ARM);
+			}
     }
     else
     {

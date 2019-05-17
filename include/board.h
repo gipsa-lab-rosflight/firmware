@@ -123,6 +123,12 @@ public:
   virtual bool gnss_has_new_data() = 0;
   virtual GNSSRaw gnss_raw_read() = 0;
 
+	virtual bool multi_range_present() = 0;
+	virtual void multi_range_update() = 0;
+	virtual bool multi_range_has_new_data() = 0;
+	virtual uint8_t multi_range_get_nb_sensors() = 0;
+	virtual void multi_range_read(uint16_t *ranges) = 0;
+	
 // RC
   virtual void rc_init(rc_type_t rc_type) = 0;
   virtual bool rc_lost() = 0;
@@ -147,6 +153,10 @@ public:
   virtual void led1_off() = 0;
   virtual void led1_toggle() = 0;
 
+// BUZZER
+  virtual void buzzer_on() = 0;
+  virtual void buzzer_off() = 0;
+	
 // Battery Voltage
 	virtual bool battery_voltage_present() = 0;
 	virtual void battery_voltage_update() = 0;

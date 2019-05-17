@@ -167,11 +167,19 @@ public:
   GNSSData gnss_read() override;
   bool gnss_has_new_data() override;
   GNSSRaw gnss_raw_read() override;
+
+	//MULTI_RANGE
+	bool multi_range_present() override;
+	void multi_range_update() override;
+	bool multi_range_has_new_data() override;
+	uint8_t multi_range_get_nb_sensors() override;
+	void multi_range_read(uint16_t *ranges) override;
+	
   // RC
   void rc_init(rc_type_t rc_type) override;
   bool rc_lost() override;
   float rc_read(uint8_t channel) override;
-
+	
   // PWM
   void pwm_init(uint32_t refresh_rate, uint16_t  idle_pwm) override;
   void pwm_disable() override;
@@ -190,7 +198,11 @@ public:
   void led1_on() override;
   void led1_off() override;
   void led1_toggle() override;
-
+	
+	// BUZZER
+	void buzzer_on() override;
+	void buzzer_off() override;
+	
 	// Battery Voltage
 	bool battery_voltage_present() override;
 	void battery_voltage_update() override;

@@ -379,6 +379,13 @@ bool BreezyBoard::gnss_has_new_data()
   return false;
 }
 
+//MULTI_RANGE
+bool BreezyBoard::multi_range_present() {return false;}
+void BreezyBoard::multi_range_update() {}
+bool BreezyBoard::multi_range_has_new_data() {return false;}
+uint8_t BreezyBoard::multi_range_get_nb_sensors() {return 0;}
+void BreezyBoard::multi_range_read(uint16_t*) {}
+
 // LED
 
 void BreezyBoard::led0_on()
@@ -406,6 +413,10 @@ void BreezyBoard::led1_toggle()
 {
   LED1_TOGGLE;
 }
+
+//BUZZER
+void BreezyBoard::buzzer_on() {}
+void BreezyBoard::buzzer_off() {}
 
 bool BreezyBoard::has_backup_data()
 {

@@ -61,6 +61,7 @@
 #include "analog_input.h"
 #include "backup_sram.h"
 #include "board.h"
+#include "multi_range.h"
 
 namespace rosflight_firmware
 {
@@ -86,11 +87,12 @@ private:
     UART sbus_uart_;
     GPIO inv_pin_;
     PWM_OUT esc_out_[PWM_NUM_OUTPUTS];
+    LED buzzer_;
     LED led2_;
-    LED led1_;
     M25P16 flash_;
     UBLOX gnss_;
 		AnalogInput voltage_input_;
+		MultiRange multi_range_;
 		
     enum SerialDevice : uint32_t
     {
@@ -172,6 +174,14 @@ public:
   GNSSData gnss_read() override;
   bool gnss_has_new_data() override;
   GNSSRaw gnss_raw_read() override;
+
+	//MULTI_RANGE
+	bool multi_range_present() override;
+	void multi_range_update() override;
+	bool multi_range_has_new_data() override;
+	uint8_t multi_range_get_nb_sensors() override;
+	void multi_range_read(uint16_t *ranges) override;
+		
   // RC
   void rc_init(rc_type_t rc_type) override;
   bool rc_lost() override;
@@ -196,6 +206,10 @@ public:
   void led1_off() override;
   void led1_toggle() override;
 
+	// BUZZER
+	void buzzer_on() override;
+	void buzzer_off() override;
+	
 	// Battery Voltage
 	bool battery_voltage_present() override;
 	void battery_voltage_update() override;

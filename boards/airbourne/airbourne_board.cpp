@@ -328,6 +328,13 @@ GNSSRaw AirbourneBoard::gnss_raw_read()
   return raw;
 }
 
+//MULTI_RANGE
+bool AirbourneBoard::multi_range_present() {return false;}
+void AirbourneBoard::multi_range_update() {}
+bool AirbourneBoard::multi_range_has_new_data() {return false;}
+uint8_t AirbourneBoard::multi_range_get_nb_sensors() {return 0;}
+void AirbourneBoard::multi_range_read(uint16_t*) {}
+
 // PWM
 void AirbourneBoard::rc_init(rc_type_t rc_type)
 {
@@ -421,6 +428,10 @@ void AirbourneBoard::led1_toggle()
 {
   led2_.toggle();
 }
+
+//BUZZER
+void AirbourneBoard::buzzer_on() {}
+void AirbourneBoard::buzzer_off() {}
 
 // Battery voltage
 bool AirbourneBoard::battery_voltage_present() {return false;}

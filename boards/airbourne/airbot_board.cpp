@@ -42,19 +42,23 @@ AirbotBoard::AirbotBoard()
 void AirbotBoard::init_board()
 {
   systemInit();
+  buzzer_.init(LED1_GPIO, LED1_PIN);
   led2_.init(LED2_GPIO, LED2_PIN);
-  led1_.init(LED1_GPIO, LED1_PIN);
+	led2_.on();
+
+	delay(500);
 	
-	voltage_input_.init(BAT_VOLTAGE_ADC, BAT_VOLTAGE_CHANNEL, BAT_VOLTAGE_GPIO, BAT_VOLTAGE_PIN);
-	
-  int_i2c_.init(&i2c_config[BARO_I2C]);
+  //int_i2c_.init(&i2c_config[BARO_I2C]);
   ext_i2c_.init(&i2c_config[EXTERNAL_I2C]);
+	
   spi1_.init(&spi_config[MPU6000_SPI]);
   spi3_.init(&spi_config[FLASH_SPI]);
   uart1_.init(&uart_config[UART1], 115200, UART::MODE_8N1);
   uart6_.init(&uart_config[UART6], 115200, UART::MODE_8N1);
 	
-  current_serial_ = &vcp_;    //uncomment this to switch to VCP as the main output
+  current_serial_ = &vcp_;    //uncomment this to switch to VCP as the main output	
+	
+	voltage_input_.init(BAT_VOLTAGE_ADC, BAT_VOLTAGE_CHANNEL, BAT_VOLTAGE_GPIO, BAT_VOLTAGE_PIN);
 }
 
 void AirbotBoard::board_reset(bool bootloader)
@@ -146,10 +150,13 @@ void AirbotBoard::serial_flush()
 // sensors
 void AirbotBoard::sensors_init()
 {
-  while(millis() < 50) {} // wait for sensors to boot up
-  imu_.init(&spi1_, MPU6000_CS_GPIO, MPU6000_CS_PIN);
-
-  baro_.init(&int_i2c_);
+  while(millis() < 500) {} // wait for sensors to boot up
+	
+  imu_.init(&spi1_, MPU6000_CS_GPIO, MPU6000_CS_PIN);	
+	
+	multi_range_.init(&ext_i2c_);
+	
+	baro_.init(&ext_i2c_);
   mag_.init(&ext_i2c_);
   sonar_.init(&ext_i2c_);
   airspeed_.init(&ext_i2c_);
@@ -325,6 +332,32 @@ GNSSRaw AirbotBoard::gnss_raw_read()
   return raw;
 }
 
+//MULTI_RANGE
+bool AirbotBoard::multi_range_present()
+{
+	return multi_range_.present();
+}
+
+void AirbotBoard::multi_range_update()
+{
+	multi_range_.update();
+}
+
+bool AirbotBoard::multi_range_has_new_data()
+{
+	return multi_range_.has_new_data();
+}
+	
+uint8_t AirbotBoard::multi_range_get_nb_sensors()
+{
+	return multi_range_.getNbSensors();
+}
+
+void AirbotBoard::multi_range_read(uint16_t *ranges)
+{
+	return multi_range_.read(ranges);
+}
+
 // PWM
 void AirbotBoard::rc_init(rc_type_t rc_type)
 {
@@ -393,13 +426,17 @@ bool AirbotBoard::memory_write(const void * data, size_t len)
 }
 
 // LED
-void AirbotBoard::led0_on() { led1_.on(); }
-void AirbotBoard::led0_off() { led1_.off(); }
-void AirbotBoard::led0_toggle() { led1_.toggle(); }
+void AirbotBoard::led0_on() {}
+void AirbotBoard::led0_off() {}
+void AirbotBoard::led0_toggle() {}
 
-void AirbotBoard::led1_on() { led2_.on(); }
-void AirbotBoard::led1_off() { led2_.off(); }
-void AirbotBoard::led1_toggle() { led2_.toggle(); }
+void AirbotBoard::led1_on() {led2_.on();}
+void AirbotBoard::led1_off() {led2_.off();}
+void AirbotBoard::led1_toggle() {led2_.toggle();}
+
+//BUZZER
+void AirbotBoard::buzzer_on() { buzzer_.off(); }
+void AirbotBoard::buzzer_off() { buzzer_.on(); }
 
 bool AirbotBoard::battery_voltage_present() {return true;}
 void AirbotBoard::battery_voltage_update()

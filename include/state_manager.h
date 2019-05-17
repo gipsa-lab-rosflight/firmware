@@ -99,8 +99,9 @@ private:
   uint32_t next_led_blink_ms_ = 0;
   uint32_t next_arming_error_msg_ms_ = 0;
 	uint32_t next_bat_low_msg_ms_ = 0;
-  uint32_t next_led0_blink_ms_ = 0;
-	bool led0_state = true;
+	
+  uint32_t next_buzzer_blink_ms_ = 0;
+	bool buzzer_state_ = false;
 
   enum FsmState
   {

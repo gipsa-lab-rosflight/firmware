@@ -58,6 +58,7 @@ private:
     STREAM_ID_BARO,
     STREAM_ID_SONAR,
     STREAM_ID_MAG,
+		STREAM_ID_MULTI_RANGE,
 		STREAM_ID_BATTERY,
 		
     STREAM_ID_SERVO_OUTPUT_RAW,
@@ -118,6 +119,7 @@ private:
   void send_baro(void);
   void send_sonar(void);
   void send_mag(void);
+  void send_multi_range(void);
   void send_battery(void);	
 
   //The time of week stamp for the last sent GNSS message, to prevent re-sending
@@ -144,6 +146,7 @@ private:
     Stream(0,     [this]{this->send_baro();}),
     Stream(0,     [this]{this->send_sonar();}),
     Stream(0,     [this]{this->send_mag();}),
+    Stream(0,     [this]{this->send_multi_range();}),		
     Stream(0,     [this]{this->send_battery();}),		
     Stream(0,     [this]{this->send_output_raw();}),
     Stream(0,     [this]{this->send_gnss();}),

@@ -384,6 +384,12 @@ void Mavlink::send_error_data(uint8_t system_id, const BackupData &error_data)
   send_message(msg);
 }
 
+void Mavlink::send_multi_range(uint8_t system_id, uint8_t nb_ranges, const uint16_t* ranges)
+{
+	mavlink_message_t msg;
+	mavlink_msg_rosflight_multi_range_pack(system_id, compid_, &msg, nb_ranges, ranges);
+}
+
 void Mavlink::send_battery(uint8_t system_id, float voltage, float percent)
 {
 	mavlink_message_t msg;

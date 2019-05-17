@@ -142,6 +142,10 @@ void CommManager::init()
   }, PARAM_STREAM_MAG_RATE);
   RF_.params_.add_callback([this](int16_t param_id)
   {
+    this->set_streaming_rate(STREAM_ID_MULTI_RANGE, param_id);
+  }, PARAM_STREAM_MULTI_RANGE_RATE);
+  RF_.params_.add_callback([this](int16_t param_id)
+  {
     this->set_streaming_rate(STREAM_ID_BATTERY, param_id);
   }, PARAM_STREAM_BATTERY_RATE);
   RF_.params_.add_callback([this](int16_t param_id)
@@ -506,6 +510,14 @@ void CommManager::send_error_data(void)
 {
   BackupData error_data = RF_.board_.get_backup_data();
   comm_link_.send_error_data(sysid_, error_data);
+}
+
+void CommManager::send_multi_range(void)
+{
+  if (RF_.sensors_.data().multi_range_present)
+	{
+    comm_link_.send_multi_range(sysid_, RF_.sensors_.data().multi_range_data.nbRanges, RF_.sensors_.data().multi_range_data.ranges);
+	}
 }
 
 void CommManager::send_battery(void)
