@@ -154,13 +154,14 @@ void AirbotBoard::sensors_init()
 	
   imu_.init(&spi1_, MPU6000_CS_GPIO, MPU6000_CS_PIN);	
 	
-	multi_range_.init(&ext_i2c_);
-	
 	baro_.init(&ext_i2c_);
   mag_.init(&ext_i2c_);
   sonar_.init(&ext_i2c_);
   airspeed_.init(&ext_i2c_);
   gnss_.init(&uart1_);
+	
+	multi_range_.init(&ext_i2c_);
+	
 }
 
 uint16_t AirbotBoard::num_sensor_errors()
@@ -196,7 +197,7 @@ void AirbotBoard::imu_not_responding_error()
 
 bool AirbotBoard::mag_present()
 {
-  mag_.update();
+  //mag_.update();
   return mag_.present();
 }
 
@@ -212,7 +213,7 @@ void AirbotBoard::mag_read(float mag[3])
 }
 bool AirbotBoard::baro_present()
 {
-  baro_.update();
+  //baro_.update();
   return baro_.present();
 }
 

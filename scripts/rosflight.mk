@@ -68,7 +68,7 @@ $(info ***** Building with Debug Symbols *****)
 BUILD_TYPE=Debug
 else
 DEBUG_FLAGS = -ggdb
-OPTIMIZE = -O2
+OPTIMIZE = -O3
 COMPILE_FLAGS = -flto
 LTO_FLAGS = -flto -fuse-linker-plugin $(OPTIMIZE)
 BUILD_TYPE=Release

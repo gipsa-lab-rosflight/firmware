@@ -388,6 +388,7 @@ void Mavlink::send_multi_range(uint8_t system_id, uint8_t nb_ranges, const uint1
 {
 	mavlink_message_t msg;
 	mavlink_msg_rosflight_multi_range_pack(system_id, compid_, &msg, nb_ranges, ranges);
+	send_message(msg);
 }
 
 void Mavlink::send_battery(uint8_t system_id, float voltage, float percent)

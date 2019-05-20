@@ -232,12 +232,12 @@ void Sensors::update_other_sensors()
 	case MULTI_RANGE:
 		if(rf_.board_.multi_range_present())
 		{
-			data_.multi_range_present = true;
 			rf_.board_.multi_range_update();
 			if(rf_.board_.multi_range_has_new_data())
 			{
 				data_.multi_range_data.nbRanges = rf_.board_.multi_range_get_nb_sensors();
 				rf_.board_.multi_range_read(data_.multi_range_data.ranges);
+				data_.multi_range_present = true;
 			}
 		}
 		break;

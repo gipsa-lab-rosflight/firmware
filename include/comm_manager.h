@@ -26,7 +26,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+* OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef ROSFLIGHT_FIRMWARE_COMM_MANAGER_H
@@ -131,7 +131,6 @@ private:
   void send_error_data(void);
 
   // Debugging Utils
-  void send_named_value_int(const char *const name, int32_t value);
   //  void send_named_command_struct(const char *const name, control_t command_struct);
 
   void send_next_param(void);
@@ -169,6 +168,7 @@ public:
 
   void send_parameter_list();
   void send_named_value_float(const char *const name, float value);
+  void send_named_value_int(const char *const name, int32_t value);
 };
 
 //CommManager *instance = nullptr;
