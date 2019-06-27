@@ -74,6 +74,10 @@ void Estimator::reset_state()
   gyro_LPF_.y = 0;
   gyro_LPF_.z = 0;
 
+  mag_LPF_.x = -1;
+  mag_LPF_.y = 0;
+  mag_LPF_.z = 0;
+
   state_.timestamp_us = RF_.board_.clock_micros();
 
   attitude_correction_next_run_ = false;
@@ -120,7 +124,7 @@ void Estimator::set_attitude_correction(const turbomath::Quaternion &q)
 
 void Estimator::run()
 {
-  float acc_kp, ki;
+  float acc_kp, ki, mag_kp, mag_ki;
   uint64_t now_us = RF_.sensors_.data().imu_time;
   if (last_time_ == 0)
   {
@@ -147,12 +151,16 @@ void Estimator::run()
   if (now_us < static_cast<uint64_t>(RF_.params_.get_param_int(PARAM_INIT_TIME))*1000)
   {
     acc_kp = RF_.params_.get_param_float(PARAM_FILTER_KP)*10.0f;
+    mag_kp = RF_.params_.get_param_float(PARAM_FILTER_KPM)*10.0f;
     ki = RF_.params_.get_param_float(PARAM_FILTER_KI)*10.0f;
+    mag_ki = RF_.params_.get_param_float(PARAM_FILTER_KIM)*10.0f;
   }
   else
   {
     acc_kp = RF_.params_.get_param_float(PARAM_FILTER_KP);
+    mag_kp = RF_.params_.get_param_float(PARAM_FILTER_KPM);
     ki = RF_.params_.get_param_float(PARAM_FILTER_KI);
+    mag_ki = RF_.params_.get_param_float(PARAM_FILTER_KIM);
   }
 
   // Run LPF to reject a lot of noise
@@ -185,7 +193,7 @@ void Estimator::run()
     // (eq 47b Mahony Paper, using correction term w_acc found above
     bias_.x -= ki*w_acc.x*dt;
     bias_.y -= ki*w_acc.y*dt;
-    bias_.z = 0.0;  // Don't integrate z bias, because it's unobservable
+    //bias_.z = 0.0;  // Don't integrate z bias, because it's unobservable
   }
   else
   {
@@ -193,6 +201,63 @@ void Estimator::run()
     w_acc.y = 0.0f;
     w_acc.z = 0.0f;
   }
+
+// add in magnetometer
+
+
+  const turbomath::Vector& raw_mag = RF_.sensors_.data().mag;  
+  float m_sqrd_norm = raw_mag.sqrd_norm();
+  turbomath::Vector w_mag;
+  
+  if (RF_.params_.get_param_int(PARAM_FILTER_USE_MAG)
+       && m_sqrd_norm < 1.1f*1.1f && a_sqrd_norm > 0.9f*0.9f)
+  {
+    // filter mag
+    float alpha_mag = RF_.params_.get_param_float(PARAM_MAG_ALPHA);
+    mag_LPF_.x = (1.0f-alpha_mag)*raw_mag.x + alpha_mag*mag_LPF_.x;
+    mag_LPF_.y = (1.0f-alpha_mag)*raw_mag.z + alpha_mag*mag_LPF_.y;
+    mag_LPF_.z = (1.0f-alpha_mag)*raw_mag.y + alpha_mag*mag_LPF_.z;
+
+    // Get error estimated by accelerometer measurement
+
+    turbomath::Vector m_(RF_.params_.get_param_float(PARAM_MAG_FIELD_X),
+                         RF_.params_.get_param_float(PARAM_MAG_FIELD_Y),
+                         RF_.params_.get_param_float(PARAM_MAG_FIELD_Z));
+//     m_.z = 0.f;
+    m_.normalize();
+    
+//     turbomath::Vector m = state_.attitude.rotate(mag_LPF_);
+//     m.z = 0.f;
+//     m.normalize();
+//     //turbomath::Quaternion q_tilde(m_, m);
+//     w_mag.x = 0.f;
+//     w_mag.y = 0.f;
+//     w_mag.z = m_.x*m.y - m_.y*m.x;
+  
+    // turn measurement into a unit vector
+    turbomath::Vector m = mag_LPF_.normalized();
+    // Get the quaternion from magnetometer (low-frequency measure q)
+    // (Not in either paper)
+    //turbomath::Quaternion q_mag_inv(m_, m);
+    // Get the error quaternion between observer and low-freq q
+    // Below Eq. 45 Mahony Paper
+    //turbomath::Quaternion q_tilde = q_mag_inv * state_.attitude;
+
+    turbomath::Quaternion q_tilde(m, state_.attitude.inverse().rotate(m_));
+    
+    // Correction Term of Eq. 47a and 47b Mahony Paper
+    // w_mag = 2*s_tilde*v_tilde
+    w_mag.x = 0.f;//-2.0f*(q_tilde.w*q_tilde.x+q_tilde.y*q_tilde.z);
+    w_mag.y = 0.f;//-2.0f*(q_tilde.w*q_tilde.y-q_tilde.z*q_tilde.x);
+    w_mag.z = -2.0f*(q_tilde.w*q_tilde.z+q_tilde.x*q_tilde.y);
+
+    // integrate biases from magnetometer feedback
+    // (eq 47b Mahony Paper, using correction term w_acc found above
+    //bias_.x -= mag_ki*w_acc.x*dt;
+    //bias_.y -= mag_ki*w_acc.y*dt;
+    bias_.z -= mag_ki*w_mag.z*dt;
+  }
+  
 
   if (attitude_correction_next_run_)
   {
@@ -218,7 +283,7 @@ void Estimator::run()
 
   // Build the composite omega vector for kinematic propagation
   // This the stuff inside the p function in eq. 47a - Mahony Paper
-  turbomath::Vector wfinal = wbar - bias_ + w_acc * acc_kp;
+  turbomath::Vector wfinal = wbar - bias_ + w_acc * acc_kp + w_mag * mag_kp;
 
   // Propagate Dynamics (only if we've moved)
   float sqrd_norm_w = wfinal.sqrd_norm();

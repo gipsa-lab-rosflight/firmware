@@ -86,8 +86,10 @@ private:
 
   turbomath::Vector accel_LPF_;
   turbomath::Vector gyro_LPF_;
+  turbomath::Vector mag_LPF_;
 
   turbomath::Vector w_acc_;
+  turbomath::Vector w_mag_;
 
   bool attitude_correction_next_run_;
   turbomath::Quaternion q_correction_;
