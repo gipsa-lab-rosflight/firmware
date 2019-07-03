@@ -108,9 +108,14 @@ USBOTG_SRC := $(filter-out ${EXCLUDES}, $(USBOTG_SRC))
 VPATH := $(VPATH):$(VCP_DIR)
 VCP_SRC = $(notdir $(wildcard $(VCP_DIR)/*.c))
 
+# Add printf source files
+VPATH := $(VPATH):$(PRINTF_DIR)
+PRINTF_SRC = printf.cpp
+
 # Make a list of source files and includes
 VPATH := $(VPATH):$(AIRBOURNE_SRC_DIR)
-AIRBOURNE_SRCS = led.cpp \
+AIRBOURNE_SRCS = $(PRINTF_SRC) \
+                 led.cpp \
                  gpio.cpp \
                  spi.cpp \
                  vcp.cpp \
@@ -121,6 +126,7 @@ AIRBOURNE_SRCS = led.cpp \
                  pwm.cpp \
                  mb1242.cpp \
                  eeprom.cpp \
+                 lis3mdl.cpp \
                  hmc5883l.cpp \
                  ms5611.cpp \
                  rc_ppm.cpp \
@@ -182,7 +188,7 @@ INCLUDE_DIRS += $(AIRBOURNE_SRC_DIR) \
 #################################
 
 MCFLAGS= -mcpu=cortex-m4 -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
-DEFS+=-DSTM32F40_41xxx -D__CORTEX_M4 -D__FPU_PRESENT -DWORDS_STACK_SIZE=200 -DUSE_STDPERIPH_DRIVER -D__FPU_USED -DUSE_USB_OTG_FS #-DHSE_VALUE=8000000
+DEFS+=-DSTM32F40_41xxx -D__CORTEX_M4 -D__FPU_PRESENT -DWORDS_STACK_SIZE=200 -DUSE_STDPERIPH_DRIVER -D__FPU_USED -DUSE_USB_OTG_FS -DHSE_VALUE=8000000
 CFLAGS += $(MCFLAGS) $(OPTIMIZE) $(addprefix -I,$(INCLUDE_DIRS))
 CXXFLAGS += $(MCFLAGS) $(OPTIMIZE) $(addprefix -I,$(INCLUDE_DIRS))
 LDFLAGS =-T $(LDSCRIPT) $(MCFLAGS) -lm -lc --specs=nano.specs --specs=rdimon.specs $(ARCH_FLAGS)  $(LTO_FLAGS)  $(DEBUG_FLAGS) -static  -Wl,-gc-sections -Wl,-Map=main.map  

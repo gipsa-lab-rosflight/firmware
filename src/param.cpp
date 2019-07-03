@@ -181,11 +181,11 @@ void Params::set_defaults(void)
   init_param_int(PARAM_INIT_TIME, "FILTER_INIT_T", 3000); // Time in ms to initialize estimator | 0 | 100000
   init_param_float(PARAM_FILTER_KP, "FILTER_KP",
                    0.5f); // estimator proportional gain - See estimator documentation | 0 | 10.0
-  init_param_float(PARAM_FILTER_KPM, "FILTER_KP",
+  init_param_float(PARAM_FILTER_KPM, "FILTER_KPM",
                    0.5f); // estimator proportional gain - See estimator documentation | 0 | 10.0
   init_param_float(PARAM_FILTER_KI, "FILTER_KI",
                    0.01f); // estimator integral gain - See estimator documentation | 0 | 1.0
-  init_param_float(PARAM_FILTER_KI, "FILTER_KIM",
+  init_param_float(PARAM_FILTER_KIM, "FILTER_KIM",
                    0.01f); // estimator integral gain - See estimator documentation | 0 | 1.0
   init_param_float(PARAM_FILTER_KP_ATT_CORRECTION, "FILTER_KP_COR",
                    10.0f); // estimator proportional gain on external attitude correction - See estimator documentation | 0 | 1.0

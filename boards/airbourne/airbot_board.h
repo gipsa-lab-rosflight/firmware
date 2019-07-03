@@ -45,7 +45,8 @@
 #include "mpu6000.h"
 #include "ms5611.h"
 #include "M25P16.h"
-#include "hmc5883l.h"
+//#include "hmc5883l.h"
+#include "lis3mdl.h"
 #include "ms4525.h"
 #include "rc_base.h"
 #include "rc_ppm.h"
@@ -78,7 +79,8 @@ private:
     SPI spi1_;
     SPI spi3_;
     MPU6000 imu_;
-    HMC5883L mag_;
+    //HMC5883L mag_;
+		LIS3MDL mag_;
     MS5611 baro_;
     MS4525 airspeed_;
     RC_PPM rc_ppm_;

@@ -32,6 +32,23 @@
 
 #include "airbot_board.h"
 
+
+#ifdef SERIAL_DEBUG
+#define DBG(...)				 \
+	printf(__VA_ARGS__);	 \
+	delay(10)
+#include "printf.h"
+UART *uartPtr = NULL;
+static void _putc(void *p, char c)
+{
+	(void)p; // avoid compiler warning about unused variable
+	uartPtr->put_byte(c);
+}
+#else
+  #define DBG(...)
+#endif
+
+
 namespace rosflight_firmware
 {
 
@@ -53,12 +70,22 @@ void AirbotBoard::init_board()
 	
   spi1_.init(&spi_config[MPU6000_SPI]);
   spi3_.init(&spi_config[FLASH_SPI]);
-  uart1_.init(&uart_config[UART1], 115200, UART::MODE_8N1);
+  uart1_.init(&uart_config[UART1], 57600, UART::MODE_8N1);
   uart6_.init(&uart_config[UART6], 115200, UART::MODE_8N1);
+
+#ifdef SERIAL_DEBUG
+	uartPtr = &uart6_;
+	init_printf(NULL, _putc);
+#endif
+	
+	DBG("init board\n");
 	
   current_serial_ = &vcp_;    //uncomment this to switch to VCP as the main output	
-	
+	//secondary_serial_device_ = SERIAL_DEVICE_VCP;
+
 	voltage_input_.init(BAT_VOLTAGE_ADC, BAT_VOLTAGE_CHANNEL, BAT_VOLTAGE_GPIO, BAT_VOLTAGE_PIN);
+
+	DBG("end init board\n");
 }
 
 void AirbotBoard::board_reset(bool bootloader)
@@ -86,6 +113,8 @@ void AirbotBoard::clock_delay(uint32_t milliseconds)
 // serial
 void AirbotBoard::serial_init(uint32_t baud_rate, uint32_t dev)
 {
+	DBG("serial_init\n");
+	
   vcp_.init();
   switch (dev)
   {
@@ -99,7 +128,7 @@ void AirbotBoard::serial_init(uint32_t baud_rate, uint32_t dev)
     current_serial_ = &uart6_;
     secondary_serial_device_ = SERIAL_DEVICE_UART6;
     break;
-  default:
+	default:
     current_serial_ = &vcp_;
     secondary_serial_device_ = SERIAL_DEVICE_VCP;
   }
@@ -151,6 +180,8 @@ void AirbotBoard::serial_flush()
 void AirbotBoard::sensors_init()
 {
   while(millis() < 500) {} // wait for sensors to boot up
+
+	DBG("init sensors\n");
 	
   imu_.init(&spi1_, MPU6000_CS_GPIO, MPU6000_CS_PIN);	
 	
@@ -158,6 +189,7 @@ void AirbotBoard::sensors_init()
   mag_.init(&ext_i2c_);
   sonar_.init(&ext_i2c_);
   airspeed_.init(&ext_i2c_);
+
   gnss_.init(&uart1_);
 	
 	multi_range_.init(&ext_i2c_);
@@ -300,7 +332,7 @@ GNSSData AirbotBoard::gnss_read()
   return gnss;
 }
 GNSSRaw AirbotBoard::gnss_raw_read()
-{
+{	
   UBLOX::NAV_PVT_t pvt = gnss_.read_raw();
   GNSSRaw raw = {};
   raw.time_of_week = pvt.iTOW;
@@ -362,6 +394,8 @@ void AirbotBoard::multi_range_read(uint16_t *ranges)
 // PWM
 void AirbotBoard::rc_init(rc_type_t rc_type)
 {
+	DBG("rc_init\n");
+	
   switch (rc_type)
   {
   case RC_TYPE_SBUS:
@@ -385,16 +419,19 @@ float AirbotBoard::rc_read(uint8_t channel)
 
 void AirbotBoard::pwm_init(uint32_t refresh_rate, uint16_t idle_pwm)
 {
+	DBG("pwm_init\n");
+	
   for (int i = 0; i < PWM_NUM_OUTPUTS; i++)
   {
     esc_out_[i].init(&pwm_config[i], refresh_rate, 2000, 1000);
     esc_out_[i].writeUs(idle_pwm);
   }
+	
 }
 
 void AirbotBoard::pwm_disable()
 {
-  for (int i = 0; i < PWM_NUM_OUTPUTS; i++)
+	for (int i = 0; i < PWM_NUM_OUTPUTS; i++)
   {
     esc_out_[i].disable();
   }
@@ -402,7 +439,7 @@ void AirbotBoard::pwm_disable()
 
 void AirbotBoard::pwm_write(uint8_t channel, float value)
 {
-  esc_out_[channel].write(value);
+	esc_out_[channel].write(value);
 }
 
 bool AirbotBoard::rc_lost()
@@ -413,6 +450,7 @@ bool AirbotBoard::rc_lost()
 // non-volatile memory
 void AirbotBoard::memory_init()
 {
+	DBG("memory_init\n");
   return flash_.init(&spi3_);
 }
 
