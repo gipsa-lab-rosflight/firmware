@@ -256,7 +256,11 @@ void Estimator::run()
     //bias_.x -= mag_ki*w_acc.x*dt;
     //bias_.y -= mag_ki*w_acc.y*dt;
     bias_.z -= mag_ki*w_mag.z*dt;
-  }
+  }else{
+		w_mag.x = 0.f;
+		w_mag.y = 0.f;
+		w_mag.z = 0.f;
+	}
   
 
   if (attitude_correction_next_run_)
