@@ -210,19 +210,19 @@ void Estimator::run()
   turbomath::Vector w_mag;
   
   if (RF_.params_.get_param_int(PARAM_FILTER_USE_MAG)
-       && m_sqrd_norm < 1.1f*1.1f && a_sqrd_norm > 0.9f*0.9f)
+       && m_sqrd_norm < 1.1f*1.1f && m_sqrd_norm > 0.9f*0.9f)
   {
     // filter mag
     float alpha_mag = RF_.params_.get_param_float(PARAM_MAG_ALPHA);
     mag_LPF_.x = (1.0f-alpha_mag)*raw_mag.x + alpha_mag*mag_LPF_.x;
-    mag_LPF_.y = (1.0f-alpha_mag)*raw_mag.z + alpha_mag*mag_LPF_.y;
-    mag_LPF_.z = (1.0f-alpha_mag)*raw_mag.y + alpha_mag*mag_LPF_.z;
+    mag_LPF_.y = -(1.0f-alpha_mag)*raw_mag.y + alpha_mag*mag_LPF_.y;//1st - => NWU to NED conv
+    mag_LPF_.z = -(1.0f-alpha_mag)*raw_mag.z + alpha_mag*mag_LPF_.z;//1st - => NWU to NED conv
 
     // Get error estimated by accelerometer measurement
 
     turbomath::Vector m_(RF_.params_.get_param_float(PARAM_MAG_FIELD_X),
-                         RF_.params_.get_param_float(PARAM_MAG_FIELD_Y),
-                         RF_.params_.get_param_float(PARAM_MAG_FIELD_Z));
+                         -RF_.params_.get_param_float(PARAM_MAG_FIELD_Y),
+                         -RF_.params_.get_param_float(PARAM_MAG_FIELD_Z));//- for y and z => NWU to NED conv
 //     m_.z = 0.f;
     m_.normalize();
     
@@ -257,7 +257,13 @@ void Estimator::run()
     //bias_.y -= mag_ki*w_acc.y*dt;
     bias_.z -= mag_ki*w_mag.z*dt;
   }
-  
+  else
+  {
+    w_mag.x = 0.0f;
+    w_mag.y = 0.0f;
+    w_mag.z = 0.0f;
+  }
+
 
   if (attitude_correction_next_run_)
   {
