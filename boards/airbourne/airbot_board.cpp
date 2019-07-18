@@ -70,8 +70,8 @@ void AirbotBoard::init_board()
 	
   spi1_.init(&spi_config[MPU6000_SPI]);
   spi3_.init(&spi_config[FLASH_SPI]);
-  uart1_.init(&uart_config[UART1], 57600, UART::MODE_8N1);
-  uart6_.init(&uart_config[UART6], 115200, UART::MODE_8N1);
+  uart1_.init(&uart_config[UART6], 115200, UART::MODE_8N1);
+  uart6_.init(&uart_config[UART1], 57600, UART::MODE_8N1);
 
 #ifdef SERIAL_DEBUG
 	uartPtr = &uart6_;
@@ -190,7 +190,7 @@ void AirbotBoard::sensors_init()
   sonar_.init(&ext_i2c_);
   airspeed_.init(&ext_i2c_);
 
-  gnss_.init(&uart1_);
+  gnss_.init(&uart6_);
 	
 	multi_range_.init(&ext_i2c_);
 	
