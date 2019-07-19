@@ -32,7 +32,6 @@
 
 #include "airbot_board.h"
 
-
 #ifdef SERIAL_DEBUG
 #define DBG(...)				 \
 	printf(__VA_ARGS__);	 \
@@ -70,11 +69,11 @@ void AirbotBoard::init_board()
 	
   spi1_.init(&spi_config[MPU6000_SPI]);
   spi3_.init(&spi_config[FLASH_SPI]);
-  uart1_.init(&uart_config[UART6], 115200, UART::MODE_8N1);
-  uart6_.init(&uart_config[UART1], 57600, UART::MODE_8N1);
+  uart1_.init(&uart_config[UART1], 115200, UART::MODE_8N1);
+  uart6_.init(&uart_config[UART6], 57600, UART::MODE_8N1);
 
 #ifdef SERIAL_DEBUG
-	uartPtr = &uart6_;
+	uartPtr = &uart1_;
 	init_printf(NULL, _putc);
 #endif
 	
@@ -113,7 +112,7 @@ void AirbotBoard::clock_delay(uint32_t milliseconds)
 // serial
 void AirbotBoard::serial_init(uint32_t baud_rate, uint32_t dev)
 {
-	DBG("serial_init\n");
+	DBG("serial_init (dev %d@%d)\n", dev, baud_rate);
 	
   vcp_.init();
   switch (dev)
