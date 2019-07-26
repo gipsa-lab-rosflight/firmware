@@ -218,6 +218,11 @@ bool AirbotBoard::imu_read(float accel[3], float* temperature, float gyro[3], ui
   gyro[1] = -read_gyro[0];
   gyro[2] = -read_gyro[2];
 
+  if(accel[0]==0
+	&& accel[1]==0
+	&& accel[2]==0)
+	return false;
+	  
   return true;
 }
 
