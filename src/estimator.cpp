@@ -193,7 +193,7 @@ void Estimator::run()
     // (eq 47b Mahony Paper, using correction term w_acc found above
     bias_.x -= ki*w_acc.x*dt;
     bias_.y -= ki*w_acc.y*dt;
-    //bias_.z = 0.0;  // Don't integrate z bias, because it's unobservable
+    bias_.z = 0.0;  // Don't integrate z bias, because it's unobservable
   }
   else
   {
@@ -210,19 +210,19 @@ void Estimator::run()
   turbomath::Vector w_mag;
   
   if (RF_.params_.get_param_int(PARAM_FILTER_USE_MAG)
-       && m_sqrd_norm < 1.1f*1.1f && m_sqrd_norm > 0.9f*0.9f)
+       && m_sqrd_norm < 1.4f*1.4f && m_sqrd_norm > 0.7f*0.7f)
   {
     // filter mag
     float alpha_mag = RF_.params_.get_param_float(PARAM_MAG_ALPHA);
-    mag_LPF_.x = (1.0f-alpha_mag)*raw_mag.x + alpha_mag*mag_LPF_.x;
+    mag_LPF_.x = -(1.0f-alpha_mag)*raw_mag.x + alpha_mag*mag_LPF_.x;
     mag_LPF_.y = -(1.0f-alpha_mag)*raw_mag.y + alpha_mag*mag_LPF_.y;//1st - => NWU to NED conv
-    mag_LPF_.z = -(1.0f-alpha_mag)*raw_mag.z + alpha_mag*mag_LPF_.z;//1st - => NWU to NED conv
+    mag_LPF_.z = (1.0f-alpha_mag)*raw_mag.z + alpha_mag*mag_LPF_.z;//1st - => NWU to NED conv
 
     // Get error estimated by accelerometer measurement
 
-    turbomath::Vector m_(RF_.params_.get_param_float(PARAM_MAG_FIELD_X),
+    turbomath::Vector m_(-RF_.params_.get_param_float(PARAM_MAG_FIELD_X),
                          -RF_.params_.get_param_float(PARAM_MAG_FIELD_Y),
-                         -RF_.params_.get_param_float(PARAM_MAG_FIELD_Z));//- for y and z => NWU to NED conv
+                         0.f*RF_.params_.get_param_float(PARAM_MAG_FIELD_Z));//- for y and z => NWU to NED conv
 //     m_.z = 0.f;
     m_.normalize();
     
@@ -236,26 +236,35 @@ void Estimator::run()
   
     // turn measurement into a unit vector
     turbomath::Vector m = mag_LPF_.normalized();
+	turbomath::Vector m__ = state_.attitude.inverse().rotate(m);
+	m__.z = 0;
+	m__.normalize();
+	w_mag.x = 0.f;
+	w_mag.y = 0.f;
+	w_mag.z = -m_.x*m__.y + m_.y*m__.x;
+		
+
     // Get the quaternion from magnetometer (low-frequency measure q)
     // (Not in either paper)
-    //turbomath::Quaternion q_mag_inv(m_, m);
+	//turbomath::Quaternion q_mag_inv(m_, m);
     // Get the error quaternion between observer and low-freq q
     // Below Eq. 45 Mahony Paper
     //turbomath::Quaternion q_tilde = q_mag_inv * state_.attitude;
 
-    turbomath::Quaternion q_tilde(m, state_.attitude.inverse().rotate(m_));
-    
+    //turbomath::Quaternion q_tilde(m, state_.attitude.inverse().rotate(m_));
+    //turbomath::Quaternion q_tilde(m_, state_.attitude.rotate(m));
+
     // Correction Term of Eq. 47a and 47b Mahony Paper
     // w_mag = 2*s_tilde*v_tilde
-    w_mag.x = 0.f;//-2.0f*(q_tilde.w*q_tilde.x+q_tilde.y*q_tilde.z);
-    w_mag.y = 0.f;//-2.0f*(q_tilde.w*q_tilde.y-q_tilde.z*q_tilde.x);
-    w_mag.z = -2.0f*(q_tilde.w*q_tilde.z+q_tilde.x*q_tilde.y);
+    //w_mag.x = 0.f;//-2.0f*(q_tilde.w*q_tilde.x+q_tilde.y*q_tilde.z);
+    //w_mag.y = 0.f;//-2.0f*(q_tilde.w*q_tilde.y-q_tilde.z*q_tilde.x);
+    //w_mag.z = -2.0f*(q_tilde.w*q_tilde.z+q_tilde.x*q_tilde.y);
 
     // integrate biases from magnetometer feedback
     // (eq 47b Mahony Paper, using correction term w_acc found above
     //bias_.x -= mag_ki*w_acc.x*dt;
     //bias_.y -= mag_ki*w_acc.y*dt;
-    bias_.z -= mag_ki*w_mag.z*dt;
+    //bias_.z -= mag_ki*w_mag.z*dt;
   }
   else
   {
